@@ -7,6 +7,7 @@
 #include <WiFiClientSecure.h>  
 #include <esp_ota_ops.h>
 #include "version.h"
+#include "HttpUpdateFromGithub.hpp"
 
 const char* url = "http://grafana.altermundi.net:8086/write?db=cto";
 const char* INICIALES = "ASC02";
@@ -15,11 +16,13 @@ const char* YOUR_GITHUB_USERNAME = "AlterMundi-MonitoreoyControl";
 const char* YOUR_REPO_NAME = "proyecto-monitoreo";
 const unsigned long UPDATE_INTERVAL = 300000; // Check updates every 5 minutes
 
+
 Adafruit_SCD30 scd30;
 WiFiManager wifiManager; 
 WiFiClientSecure clientSecure;  
 WiFiClient client;
 HTTPClient http;
+HttpUpdateFromGithub updater(YOUR_GITHUB_USERNAME, YOUR_REPO_NAME, FIRMWARE_VERSION);
 
 void setup() {
   Serial.begin(115200);
@@ -33,104 +36,113 @@ void setup() {
   }
 
   clientSecure.setInsecure(); 
-  }
+// Initialize
+    updater.begin(clientSecure);
+    
+    // Optionally set callbacks
+    updater.setCallbacks(
+        []() { Serial.println("Update started..."); },
+        []() { Serial.println("Update finished!"); },
+        [](int cur, int total) { Serial.printf("Progress: %d/%d\n", cur, total); },
+        [](int err) { Serial.printf("Error: %d\n", err); }
+    );
+}
 
-String getLatestReleaseTag(const char* repoOwner, const char* repoName) {
+// String getLatestReleaseTag(const char* repoOwner, const char* repoName) {
  
-  String apiUrl = "https://api.github.com/repos/" + String(repoOwner) + "/" + String(repoName) + "/releases/latest";
-  Serial.println("API URL: " + apiUrl);
+//   String apiUrl = "https://api.github.com/repos/" + String(repoOwner) + "/" + String(repoName) + "/releases/latest";
+//   Serial.println("API URL: " + apiUrl);
 
-  if (http.begin(clientSecure, apiUrl)) {
-    int httpCode = http.GET();
-    if (httpCode == HTTP_CODE_OK) {
-      String payload = http.getString();
-      http.end();  
+//   if (http.begin(clientSecure, apiUrl)) {
+//     int httpCode = http.GET();
+//     if (httpCode == HTTP_CODE_OK) {
+//       String payload = http.getString();
+//       http.end();  
 
-      // Manually find "tag_name": "..."
-      int tagPos = payload.indexOf("\"tag_name\":");
-      if (tagPos != -1) {
-        int startQuote = payload.indexOf("\"", tagPos + 11);  // Skip `"tag_name":`
-        int endQuote = payload.indexOf("\"", startQuote + 1);
-        if (startQuote != -1 && endQuote != -1) {
-          return payload.substring(startQuote + 1, endQuote);
-        }
-      }
+//       // Manually find "tag_name": "..."
+//       int tagPos = payload.indexOf("\"tag_name\":");
+//       if (tagPos != -1) {
+//         int startQuote = payload.indexOf("\"", tagPos + 11);  // Skip `"tag_name":`
+//         int endQuote = payload.indexOf("\"", startQuote + 1);
+//         if (startQuote != -1 && endQuote != -1) {
+//           return payload.substring(startQuote + 1, endQuote);
+//         }
+//       }
       
-      Serial.println("Tag not found in JSON!");
-    } else {
-      Serial.printf("HTTP GET failed, error: %d\n", httpCode);
-    }
+//       Serial.println("Tag not found in JSON!");
+//     } else {
+//       Serial.printf("HTTP GET failed, error: %d\n", httpCode);
+//     }
 
     
-  } else {
-    Serial.println("Unable to connect to GitHub API.");
-  }
-  http.end();  
-  return "";
-}
+//   } else {
+//     Serial.println("Unable to connect to GitHub API.");
+//   }
+//   http.end();  
+//   return "";
+// }
+// void checkForUpdates() {
+//   String latestTag = getLatestReleaseTag(YOUR_GITHUB_USERNAME, YOUR_REPO_NAME);
+//   Serial.printf("Current version: %s, Available version: %s\n", FIRMWARE_VERSION, latestTag.c_str());
 
-void checkForUpdates() {
-  String latestTag = getLatestReleaseTag(YOUR_GITHUB_USERNAME, YOUR_REPO_NAME);
-  Serial.printf("Current version: %s, Available version: %s\n", FIRMWARE_VERSION, latestTag.c_str());
-
-  if (latestTag != "") {
-    if (latestTag != FIRMWARE_VERSION) {
-      const esp_partition_t* update_partition = esp_ota_get_next_update_partition(NULL);
+//   if (latestTag != "") {
+//     if (latestTag != FIRMWARE_VERSION) {
+//       const esp_partition_t* update_partition = esp_ota_get_next_update_partition(NULL);
       
-      String firmwareURL = "https://github.com/" + String(YOUR_GITHUB_USERNAME) + "/" + String(YOUR_REPO_NAME) + "/releases/download/" + latestTag + "/SendToGrafana.ino.bin";
-      Serial.println("Firmware URL: " + firmwareURL);
+//       String firmwareURL = "https://github.com/" + String(YOUR_GITHUB_USERNAME) + "/" + String(YOUR_REPO_NAME) + "/releases/download/" + latestTag + "/SendToGrafana.ino.bin";
+//       Serial.println("Firmware URL: " + firmwareURL);
 
-      // Create the HTTP client to follow redirects
-      HTTPClient redirectHttp;
-      redirectHttp.begin(clientSecure, firmwareURL);  // Start the initial request
+//       // Create the HTTP client to follow redirects
+//       HTTPClient redirectHttp;
+//       redirectHttp.begin(clientSecure, firmwareURL);  // Start the initial request
     
-      const char *headerKeys[] = {"Location"};
-      const size_t headerKeysCount = sizeof(headerKeys) / sizeof(headerKeys[0]);
-      redirectHttp.collectHeaders(headerKeys, headerKeysCount);
+//       const char *headerKeys[] = {"Location"};
+//       const size_t headerKeysCount = sizeof(headerKeys) / sizeof(headerKeys[0]);
+//       redirectHttp.collectHeaders(headerKeys, headerKeysCount);
 
-      int redirectCode = redirectHttp.GET();  // Perform GET request
-      if (redirectCode == HTTP_CODE_FOUND || redirectCode == HTTP_CODE_MOVED_PERMANENTLY) {
-        Serial.println("Redirect found, HTTP code: " + String(redirectCode));        
-        Serial.println(redirectHttp.getString());
-        Serial.println(redirectHttp.headers());
-        Serial.println(redirectHttp.header("Location"));
-        // Now HTTPClient automatically handles redirection
-        String redirectedURL = redirectHttp.header("Location");
-        if (redirectedURL.length() > 0) {
-          Serial.println("Redirected to: " + redirectedURL);
-          firmwareURL = redirectedURL;  // Update firmware URL to the redirected one
-        } else {
-          Serial.println("No 'Location' header found in redirect response.");
-        }
-        // Proceed to update using the final URL
-        HTTPUpdate httpUpdate;
+//       int redirectCode = redirectHttp.GET();  // Perform GET request
+//       if (redirectCode == HTTP_CODE_FOUND || redirectCode == HTTP_CODE_MOVED_PERMANENTLY) {
+//         Serial.println("Redirect found, HTTP code: " + String(redirectCode));        
+//         Serial.println(redirectHttp.getString());
+//         Serial.println(redirectHttp.headers());
+//         Serial.println(redirectHttp.header("Location"));
+//         // Now HTTPClient automatically handles redirection
+//         String redirectedURL = redirectHttp.header("Location");
+//         if (redirectedURL.length() > 0) {
+//           Serial.println("Redirected to: " + redirectedURL);
+//           firmwareURL = redirectedURL;  // Update firmware URL to the redirected one
+//         } else {
+//           Serial.println("No 'Location' header found in redirect response.");
+//         }
+//         // Proceed to update using the final URL
+//         HTTPUpdate httpUpdate;
 
-        httpUpdate.onStart([](){ Serial.println("Update started..."); });
-        httpUpdate.onEnd([](){ Serial.println("Update finished!"); });
-        httpUpdate.onProgress([](int cur, int total) { Serial.printf("Update progress: %d/%d\n", cur, total); });
-        httpUpdate.onError([](int err) { Serial.printf("Update error: %d\n", err); });
+//         httpUpdate.onStart([](){ Serial.println("Update started..."); });
+//         httpUpdate.onEnd([](){ Serial.println("Update finished!"); });
+//         httpUpdate.onProgress([](int cur, int total) { Serial.printf("Update progress: %d/%d\n", cur, total); });
+//         httpUpdate.onError([](int err) { Serial.printf("Update error: %d\n", err); });
 
-        t_httpUpdate_return ret = httpUpdate.update(clientSecure, firmwareURL);
+//         t_httpUpdate_return ret = httpUpdate.update(clientSecure, firmwareURL);
 
-        if (ret == HTTP_UPDATE_OK) {
-          Serial.println("Update successful!");
-          esp_ota_set_boot_partition(update_partition);
-        } else {
-          Serial.printf("Update failed: %d\n", httpUpdate.getLastError());
-        }
+//         if (ret == HTTP_UPDATE_OK) {
+//           Serial.println("Update successful!");
+//           esp_ota_set_boot_partition(update_partition);
+//         } else {
+//           Serial.printf("Update failed: %d\n", httpUpdate.getLastError());
+//         }
 
-      } else {
-        Serial.printf("Error following redirect. HTTP code: %d\n", redirectCode);
-      }
-      // Always end the HTTP connection
-      redirectHttp.end();
-    } else {
-      Serial.println("Firmware is up to date.");
-    }
-  } else {
-    Serial.println("Unable to check for updates... empty release tag.");
-  }
-}
+//       } else {
+//         Serial.printf("Error following redirect. HTTP code: %d\n", redirectCode);
+//       }
+//       // Always end the HTTP connection
+//       redirectHttp.end();
+//     } else {
+//       Serial.println("Firmware is up to date.");
+//     }
+//   } else {
+//     Serial.println("Unable to check for updates... empty release tag.");
+//   }
+// }
 
 String create_grafana_message(float temperature, float humidity, float co2) {
   unsigned long long timestamp = time(nullptr) * 1000000000ULL;
@@ -171,7 +183,7 @@ void loop() {
   unsigned long lastUpdateCheck = 0,currentMillis = millis();
   if (currentMillis - lastUpdateCheck >= UPDATE_INTERVAL) {
     Serial.printf("Free heap before checking: %d bytes\n", ESP.getFreeHeap());
-    checkForUpdates();
+    updater.checkForUpdates();
     Serial.printf("Free heap after checking: %d bytes\n", ESP.getFreeHeap());
     lastUpdateCheck = currentMillis;
   }
