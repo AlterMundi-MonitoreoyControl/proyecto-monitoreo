@@ -11,7 +11,6 @@
 const char* url = "http://grafana.altermundi.net:8086/write?db=cto";
 const char* INICIALES = "ASC02";
 const char* token_grafana = "token:e98697797a6a592e6c886277041e6b95";
-const char* FIRMWARE_BIN_URL = "http://192.168.0.106:8080/bins/SendToGrafana.ino.bin";
 const char* YOUR_GITHUB_USERNAME = "AlterMundi-MonitoreoyControl";
 const char* YOUR_REPO_NAME = "proyecto-monitoreo";
 const unsigned long UPDATE_INTERVAL = 300000; // Check updates every 5 minutes
@@ -69,6 +68,7 @@ String getLatestReleaseTag(const char* repoOwner, const char* repoName) {
   http.end();  
   return "";
 }
+
 void checkForUpdates() {
   String latestTag = getLatestReleaseTag(YOUR_GITHUB_USERNAME, YOUR_REPO_NAME);
   Serial.printf("Current version: %s, Available version: %s\n", FIRMWARE_VERSION, latestTag.c_str());
