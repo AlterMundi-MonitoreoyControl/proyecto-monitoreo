@@ -40,7 +40,7 @@ void setup() {
 
   String mac = WiFi.macAddress(); 
   mac.replace(":", "");           
-  snprintf(device_name, sizeof(device_name), "%smoni-%s", INICIALES, mac.c_str());
+  snprintf(device_name, sizeof(device_name), "moni-%s", mac.c_str());
 
   }
 
