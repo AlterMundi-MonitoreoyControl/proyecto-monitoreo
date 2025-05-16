@@ -14,13 +14,16 @@ const char* token_grafana = "token:e98697797a6a592e6c886277041e6b95";
 const char* FIRMWARE_BIN_URL = "http://192.168.0.106:8080/bins/SendToGrafana.ino.bin";
 const char* YOUR_GITHUB_USERNAME = "AlterMundi-MonitoreoyControl";
 const char* YOUR_REPO_NAME = "proyecto-monitoreo";
-const unsigned long UPDATE_INTERVAL = 300000; // Check updates every 5 minutes
+const unsigned long UPDATE_INTERVAL = 3600000; // Check updates every 1 hour
 
 Adafruit_SCD30 scd30;
 WiFiManager wifiManager; 
 WiFiClientSecure clientSecure;  
 WiFiClient client;
 HTTPClient http;
+
+char device_name[64];
+unsigned long lastUpdateCheck = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -33,7 +36,12 @@ void setup() {
     Serial.println("No se pudo inicializar el sensor SCD30!");
   }
 
-  clientSecure.setInsecure(); 
+  clientSecure.setInsecure();
+
+  String mac = WiFi.macAddress(); 
+  mac.replace(":", "");           
+  snprintf(device_name, sizeof(device_name), "%smoni-%s", INICIALES, mac.c_str());
+
   }
 
 String getLatestReleaseTag(const char* repoOwner, const char* repoName) {
@@ -134,7 +142,8 @@ void checkForUpdates() {
 
 String create_grafana_message(float temperature, float humidity, float co2) {
   unsigned long long timestamp = time(nullptr) * 1000000000ULL;
-  String message = "medicionesCO2,device=" + String(INICIALES) + 
+
+  String message = "medicionesCO2,device=" + String(device_name) + 
                    " temp=" + String(temperature, 2) +
                    ",hum=" + String(humidity, 2) + 
                    ",co2=" + String(co2) + 
@@ -142,6 +151,7 @@ String create_grafana_message(float temperature, float humidity, float co2) {
 
   return message;
 }
+
 
 void send_data_grafana(float temperature, float humidity, float co2) {
   if (WiFi.status() == WL_CONNECTED) {
@@ -168,7 +178,7 @@ void send_data_grafana(float temperature, float humidity, float co2) {
 void loop() {
 
   // Check for updates periodically instead of every loop
-  unsigned long lastUpdateCheck = 0,currentMillis = millis();
+  unsigned long currentMillis = millis();
   if (currentMillis - lastUpdateCheck >= UPDATE_INTERVAL) {
     Serial.printf("Free heap before checking: %d bytes\n", ESP.getFreeHeap());
     checkForUpdates();
