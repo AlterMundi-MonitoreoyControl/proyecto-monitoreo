@@ -45,12 +45,22 @@ void setup() {
 
   createConfigFile(); 
 
-  sensorActivo = scd30.begin(); 
-  if (!sensorActivo) {  
-    Serial.println("No se pudo inicializar el sensor SCD30!");
-  }
+  #if !defined(MODO_SIMULACION)
+    sensorActivo = scd30.begin(); 
+    if (!sensorActivo) {  
+      Serial.println("No se pudo inicializar el sensor SCD30!");
+    }
+  #endif
 
   clientSecure.setInsecure(); 
+
+  //if (WiFi.status() == WL_CONNECTED && wifiManager.server != nullptr) {
+  //  wifiManager.server->on("/actual", HTTP_GET, handleMediciones);
+  //  wifiManager.server->on("/config", HTTP_GET, handleConfiguracion);
+  //  Serial.println("Servidor web iniciado en el puerto 80");
+  //} else {
+  //  Serial.println("Error conectando WiFi o accediendo al servidor.");
+  //}
 
   server.on("/actual", HTTP_GET, handleMediciones);
   server.on("/config", HTTP_GET, handleConfiguracion);
@@ -61,11 +71,12 @@ void setup() {
 }
 
 void loop() {
-  server.handleClient();
+  //server.handleClient();
+  //wifiManager.server->handleClient(); 
 
   unsigned long currentMillis = millis();
 
-  // 1. Verificamos si hay que chequear actualizaciones
+  //// 1. Verificamos si hay que chequear actualizaciones
   if (currentMillis - lastUpdateCheck >= UPDATE_INTERVAL) {
     Serial.printf("Free heap before checking: %d bytes\n", ESP.getFreeHeap());
     checkForUpdates();
@@ -73,7 +84,7 @@ void loop() {
     lastUpdateCheck = currentMillis;
   }
 
-  // 2. Enviamos datos a Grafana cada 10 segundos
+  //// 2. Enviamos datos a Grafana cada 10 segundos
   if (currentMillis - lastSendTime >= 10000) {
     lastSendTime = currentMillis;
 
@@ -100,10 +111,12 @@ void loop() {
     #endif
 
     Serial.printf("Free heap before sending: %d bytes\n", ESP.getFreeHeap());
-    sendDataGrafana(temperature, humidity, co2);
+    //sendDataGrafana(temperature, humidity, co2);
     Serial.printf("Free heap after sending: %d bytes\n", ESP.getFreeHeap());
   }
-  delay(10);
+  ////delay(10);
+  ////Serial.printf("andaaaaaaaaaaaaaaaaa\n", ESP.getFreeHeap());
+  ////delay(3000);
 }
 
 #endif  // UNIT_TEST
