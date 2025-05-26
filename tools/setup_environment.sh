@@ -22,3 +22,8 @@ arduino-cli lib install "ArduinoJson"
 #
 # arduino-cli compile --fqbn esp32:esp32:esp32 SendToGrafana.ino --build-path ./bins
 # arduino-cli upload -p /dev/ttyUSB0 --fqbn esp32:esp32:esp32 --input-dir ./bins
+
+## PLATFORMIO
+pio test -e native_test -vvv
+pio run -e esp32dev
+pio run -e esp32dev -t upload

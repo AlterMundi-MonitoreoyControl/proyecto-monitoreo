@@ -54,14 +54,6 @@ void setup() {
 
   clientSecure.setInsecure(); 
 
-  //if (WiFi.status() == WL_CONNECTED && wifiManager.server != nullptr) {
-  //  wifiManager.server->on("/actual", HTTP_GET, handleMediciones);
-  //  wifiManager.server->on("/config", HTTP_GET, handleConfiguracion);
-  //  Serial.println("Servidor web iniciado en el puerto 80");
-  //} else {
-  //  Serial.println("Error conectando WiFi o accediendo al servidor.");
-  //}
-
   server.on("/actual", HTTP_GET, handleMediciones);
   server.on("/config", HTTP_GET, handleConfiguracion);
 
@@ -71,8 +63,7 @@ void setup() {
 }
 
 void loop() {
-  //server.handleClient();
-  //wifiManager.server->handleClient(); 
+  server.handleClient();
 
   unsigned long currentMillis = millis();
 
@@ -111,12 +102,10 @@ void loop() {
     #endif
 
     Serial.printf("Free heap before sending: %d bytes\n", ESP.getFreeHeap());
-    //sendDataGrafana(temperature, humidity, co2);
+    sendDataGrafana(temperature, humidity, co2);
     Serial.printf("Free heap after sending: %d bytes\n", ESP.getFreeHeap());
   }
-  ////delay(10);
-  ////Serial.printf("andaaaaaaaaaaaaaaaaa\n", ESP.getFreeHeap());
-  ////delay(3000);
+  delay(10);
 }
 
 #endif  // UNIT_TEST

@@ -7,7 +7,7 @@
 #include "sendDataGrafana.h"
 #include "createGrafanaMessage.h"
 
- 
+
 
 void sendDataGrafana(float temperature, float humidity, float co2) {
     if (WiFi.status() == WL_CONNECTED) {
@@ -18,13 +18,8 @@ void sendDataGrafana(float temperature, float humidity, float co2) {
         localHttp.addHeader("Content-Type", "text/plain");
         localHttp.addHeader("Authorization", "Basic " + String(TOKEN_GRAFANA));
 
-        //Serial.println("pre create mensaje ");// sacar
         String data = create_grafana_message(temperature, humidity, co2);
 
-        //Serial.println("Mensaje generado:");
-        //Serial.println(data);
-
-        //Serial.println("pre POST ");// sacar
         int httpResponseCode = localHttp.POST(data);
         if (httpResponseCode == 204) {
             Serial.println("Datos enviados correctamente");
