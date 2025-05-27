@@ -1,0 +1,14 @@
+{
+  "rotation_duration": 50000,
+  "rotation_period": 3600000,
+  "min_temperature": 37.5,
+  "max_temperature": 37.7,
+  "tray_one_date": 0,
+  "tray_two_date": 0,
+  "tray_three_date": 0,
+  "incubation_period": 18,
+  "max_hum": 65,
+  "min_hum": 55,
+  "hash": "moni-XXXX",
+  "moni_name": "moni-XXXX"
+}

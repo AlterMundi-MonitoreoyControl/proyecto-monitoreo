@@ -1,56 +1,48 @@
-name: Build Firmware
+name: Build Firmware (PlatformIO)
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
-    types: [closed]
 
 permissions: write-all
 
 jobs:
   build:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Add Arduino CLI to PATH
-      run: echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-    - name: Install Arduino CLI
-      run: |
-        curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
-        echo "$HOME/bin" >> $GITHUB_PATH
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
 
-    - name: Configure Arduino CLI
-      run: |
-        arduino-cli config init
-        arduino-cli config set board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
-        arduino-cli core update-index
-        arduino-cli core install esp32:esp32
-
-    - name: Install Required Libraries
-      run: |
-        arduino-cli lib install "HTTPClient"
-        arduino-cli lib install "Adafruit SCD30"
-        arduino-cli lib install "WiFiManager"
+    - name: Install PlatformIO
+      run: pip install platformio
 
     - name: Build Firmware
       run: |
         mkdir -p binarios
-        arduino-cli compile --fqbn esp32:esp32:esp32 --output-dir binarios src/embedded/test/SendToGrafana/SendToGrafana.ino
+        pio run -e esp32dev            # Compila todo, incluyendo firmware.bin
+        pio run -e esp32dev --target buildfs   # También el SPIFFS
+        cp .pio/build/esp32dev/firmware.bin binarios/
+        cp .pio/build/esp32dev/spiffs.bin binarios/ || echo "No se generó spiffs.bin"
 
     - name: Get Version
-      id: get_version  
+      id: get_version
       run: |
-        VERSION=$(sed -n 's/#define FIRMWARE_VERSION "\([^"]*\)"/\1/p' src/embedded/test/SendToGrafana/version.h)
+        VERSION=$(sed -n 's/#define FIRMWARE_VERSION "\([^"]*\)"/\1/p' include/version.h)
         echo "version=$VERSION" >> $GITHUB_ENV
-   
+
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         artifacts: "binarios/*"
         tag: "${{ env.version }}"
-        name: Release "${{ env.version }}" # Use the step output
+        name: Release "${{ env.version }}"
         body: "Binarios de firmware generados automáticamente"
         token: ${{ secrets.GITHUB_TOKEN }}
