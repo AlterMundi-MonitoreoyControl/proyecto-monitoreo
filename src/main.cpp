@@ -28,6 +28,10 @@ bool sensorActivo = false;
 void setup() {
   Serial.begin(115200);
   
+  #if defined(MODO_SIMULACION)
+    delay(2000); 
+  #endif
+
   wifiManager.setConnectTimeout(30); 
   wifiManager.autoConnect("ESP32-AP"); 
   
@@ -44,6 +48,10 @@ void setup() {
   }
 
   createConfigFile(); 
+
+  String mac = WiFi.macAddress(); 
+  mac.replace(":", "");            
+  snprintf(deviceName, sizeof(deviceName), "moni-%s", mac.c_str());
 
   #if !defined(MODO_SIMULACION)
     sensorActivo = scd30.begin(); 
@@ -105,7 +113,6 @@ void loop() {
     sendDataGrafana(temperature, humidity, co2);
     Serial.printf("Free heap after sending: %d bytes\n", ESP.getFreeHeap());
   }
-  delay(10);
 }
 
 #endif  // UNIT_TEST

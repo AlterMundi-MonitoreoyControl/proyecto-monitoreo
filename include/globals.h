@@ -14,5 +14,6 @@ extern WiFiManager wifiManager;
 extern WiFiClientSecure clientSecure;
 extern WiFiClient client;
 extern HTTPClient http;
+extern char deviceName[32];
 
 #endif // GLOBALS_H
