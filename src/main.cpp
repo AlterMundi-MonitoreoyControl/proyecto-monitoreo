@@ -52,15 +52,6 @@ void setup() {
     enModoLocal = true;
   }
 
-  //wifiManager.setConnectTimeout(30); // ver si sacarlo
-  //if (!wifiManager.autoConnect("ESP32-AP")) { // ver esto
-  //  Serial.println("No se pudo conectar a WiFi.");
-  //  enModoLocal = true;
-  //} else {
-  //  Serial.println("Conectado a WiFi automaticamente");
-  //}
-
-
   WiFi.softAP("ESP32-SENSOR", "12345678"); // nombre y contraseña del AP
 
   #if defined(MODO_SIMULACION)
