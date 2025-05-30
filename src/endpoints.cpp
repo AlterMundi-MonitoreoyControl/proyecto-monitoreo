@@ -5,7 +5,6 @@
 #include <SPIFFS.h>
 #include "endpoints.h"
 #include "globals.h"
-
 #include <ArduinoJson.h>
 
 void handleMediciones() {
