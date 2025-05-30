@@ -17,9 +17,9 @@ int main() {
     RUN_TEST(testHandleMediciones);
     RUN_TEST(testHandleConfiguracion);
     RUN_TEST(testCheckForUpdates);
+    RUN_TEST(testGetLatestReleaseTag);       
     RUN_TEST(testCreateGrafanaMessage);
     RUN_TEST(testSendDataGrafana);
-    RUN_TEST(testGetLatestReleaseTag);       
     return UNITY_END();
 }
 //void setup() {

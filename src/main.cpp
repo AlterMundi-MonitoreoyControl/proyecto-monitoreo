@@ -60,7 +60,7 @@ void setup() {
       Serial.println(WiFi.localIP());
     }
     Serial.print("AP IP: ");
-    Serial.println(WiFi.softAPIP());
+    Serial.println(WiFi.softAPIP()); // 192.168.4.1
   #endif
 
   if (!enModoLocal) {

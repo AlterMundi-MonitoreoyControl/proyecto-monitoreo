@@ -1,5 +1,4 @@
 #include "createGrafanaMessage.h"
-#include <WiFi.h>
 #include <constants.h>
 #include "globals.h"
 
