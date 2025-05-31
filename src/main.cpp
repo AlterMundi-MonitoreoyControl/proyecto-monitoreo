@@ -120,6 +120,8 @@ void loop() {
 
       float temperature = 99, humidity = 100, co2 = 999999;
 
+      uint32_t uptime = millis() / 1000;
+
       #if defined(MODO_SIMULACION)
         // Datos simulados
         temperature = 22.5 + random(-100, 100) * 0.01;
@@ -139,9 +141,9 @@ void loop() {
           Serial.println("Sensor no listo, esperando..."); 
         }
       #endif
-
-      Serial.printf("Free heap before sending: %d bytes\n", ESP.getFreeHeap());
-      sendDataGrafana(temperature, humidity, co2);
+      uint32_t heap = ESP.getFreeHeap();
+      Serial.printf("Free heap before sending: %d bytes\n", heap);
+      sendDataGrafana(temperature, humidity, co2, heap, uptime);
       Serial.printf("Free heap after sending: %d bytes\n", ESP.getFreeHeap());
           
     }    

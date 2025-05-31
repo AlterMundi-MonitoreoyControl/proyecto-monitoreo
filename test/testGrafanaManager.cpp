@@ -1,7 +1,9 @@
 #include <unity.h>
 #include "createGrafanaMessage.h"
-#include <ctime>     // para time_t, time()
-#include <cstdio>    // para snprintf
+
+#include <ctime>     
+#include <cstdio>    
+#include <cstdint>
 
 // Simulamos la variable global
 char deviceName[64] = "ASC02";
@@ -19,11 +21,11 @@ void testSendDataGrafana() {
 
 void testCreateGrafanaMessage() {
     char buffer[256];
-    createGrafanaMessage(buffer, sizeof(buffer), 23.45, 55.67, 789.0);
+    createGrafanaMessage(buffer, sizeof(buffer), 23.45, 55.67, 789.0, 45678, 1234);
 
     char expected[256];
     snprintf(expected, sizeof(expected),
-             "medicionesCO2,device=%s temp=23.45,hum=55.67,co2=789.00 1234567890000000000",
+             "medicionesCO2,device=%s temp=23.45,hum=55.67,co2=789,heap=45678,uptime=1234 1234567890000000000",
              deviceName);
 
     TEST_ASSERT_EQUAL_STRING(expected, buffer);
