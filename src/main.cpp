@@ -34,16 +34,31 @@ void setup() {
   #endif
 
   WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP(SSID, PASSWORD); // nombre y contraseña del AP
 
   // Intentar conectarse a red WiFi guardada
-  WiFi.begin();
-  unsigned long startAttemptTime = millis();
-  const unsigned long wifiTimeout = 10000; // 10 segundos
+  //WiFi.begin();
+  //unsigned long startAttemptTime = millis();
+  //const unsigned long wifiTimeout = 10000; // 10 segundos
 
-  while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < wifiTimeout) {
-    delay(100);
+  //while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < wifiTimeout) {
+  //  delay(100);
+  //}
+  wifiManager.setConfigPortalBlocking(false);
+  wifiManager.setConfigPortalTimeout(0);  // 0 = portal infinito
+  wifiManager.setConnectTimeout(30); // Config tiempo en que revisara si se puede conectar a la red WiFi guardada
+
+  if (!wifiManager.autoConnect("ConfigPortal")) {
+    Serial.println("Failed to connect, starting config portal");
+    // You can handle timeout or fallback here
+  } else {
+    Serial.println("Connected to WiFi");
+    Serial.print("STA IP: ");
+    Serial.println(WiFi.localIP());
   }
 
+
+  //probablemente haya que sacar esto: -------------
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("Conectado a WiFi");
     enModoLocal = false;
@@ -52,7 +67,7 @@ void setup() {
     enModoLocal = true;
   }
 
-  WiFi.softAP("ESP32-SENSOR", "12345678"); // nombre y contraseña del AP
+  //WiFi.softAP(SSID, PASSWORD); // nombre y contraseña del AP
 
   #if defined(MODO_SIMULACION)
     if(!enModoLocal){
@@ -96,12 +111,21 @@ void setup() {
 
 void loop() {
   server.handleClient();
+  wifiManager.process(); // Mantiene activo el portal cautivo
 
   // Detectar si el WiFi se desconectó luego de haber estado conectado
-  if (!enModoLocal && WiFi.status() != WL_CONNECTED) {
-    Serial.println("WiFi desconectado. Cambiando a modo local.");
+  if (!enModoLocal && WiFi.status() == WL_DISCONNECTED) { // si habia wifi & no esta conectado
+    Serial.println("WiFi conectado. Cambiando a modo no local");
     enModoLocal = true;
+  }else if (enModoLocal && WiFi.status() == WL_CONNECTED){ // si no habia wifi & esta conectado
+    Serial.println("WiFi desconectado. Cambiando a modo local.");
+    enModoLocal = false;    
   }
+
+  // ver como arreglar esto
+  //if (!enModoLocal) {
+  //  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  //}
 
   unsigned long currentMillis = millis();
 
