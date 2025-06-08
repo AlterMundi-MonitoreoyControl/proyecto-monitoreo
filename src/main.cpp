@@ -26,6 +26,7 @@ bool enModoLocal = false;
 
 #ifndef UNIT_TEST
 
+
 void setup() {
   Serial.begin(115200);
 
@@ -34,49 +35,30 @@ void setup() {
   #endif
 
   WiFi.mode(WIFI_AP_STA);
-  WiFi.softAP(SSID, PASSWORD); // nombre y contraseña del AP
-
-  // Intentar conectarse a red WiFi guardada
-  //WiFi.begin();
-  //unsigned long startAttemptTime = millis();
-  //const unsigned long wifiTimeout = 10000; // 10 segundos
-
-  //while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < wifiTimeout) {
-  //  delay(100);
-  //}
+  WiFi.softAP(SSID, PASSWORD);
+    
   wifiManager.setConfigPortalBlocking(false);
-  wifiManager.setConfigPortalTimeout(0);  // 0 = portal infinito
-  wifiManager.setConnectTimeout(30); // Config tiempo en que revisara si se puede conectar a la red WiFi guardada
+  wifiManager.setConfigPortalTimeout(0);
+  
+  // Intentar conectarse a red WiFi guardada
+  WiFi.begin();
+  unsigned long startAttemptTime = millis();
+  const unsigned long wifiTimeout = 10000; // 10 segundos
+  while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < wifiTimeout) {
+    delay(100);
+  }  
 
-  if (!wifiManager.autoConnect("ConfigPortal")) {
-    Serial.println("Failed to connect, starting config portal");
-    // You can handle timeout or fallback here
-  } else {
-    Serial.println("Connected to WiFi");
-    Serial.print("STA IP: ");
-    Serial.println(WiFi.localIP());
-  }
+  wifiManager.startWebPortal();
 
-
-  //probablemente haya que sacar esto: -------------
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("Conectado a WiFi");
+    Serial.print("STA IP: ");
+    Serial.println(WiFi.localIP());
     enModoLocal = false;
   } else {
     Serial.println("No se pudo conectar a WiFi, funcionando en modo local");
     enModoLocal = true;
   }
-
-  //WiFi.softAP(SSID, PASSWORD); // nombre y contraseña del AP
-
-  #if defined(MODO_SIMULACION)
-    if(!enModoLocal){
-      Serial.print("STA IP: ");
-      Serial.println(WiFi.localIP());
-    }
-    Serial.print("AP IP: ");
-    Serial.println(WiFi.softAPIP()); // 192.168.4.1
-  #endif
 
   if (!enModoLocal) {
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
@@ -87,7 +69,6 @@ void setup() {
   }
 
   createConfigFile(); 
-
   String mac = WiFi.macAddress(); 
   mac.replace(":", "");            
   snprintf(deviceName, sizeof(deviceName), "moni-%s", mac.c_str());
@@ -99,33 +80,29 @@ void setup() {
     }
   #endif
 
-  clientSecure.setInsecure(); 
+  clientSecure.setInsecure();
 
   server.on("/actual", HTTP_GET, handleMediciones);
   server.on("/config", HTTP_GET, handleConfiguracion);
   server.begin();
   
-  Serial.println("Servidor web iniciado en el puerto 80");
-    
+  Serial.println("Servidor web iniciado en el puerto 8080"); 
+  Serial.println("Accede a: http://192.168.4.1:8080/actual o http://[IP]:8080/actual");
+
 }
 
 void loop() {
   server.handleClient();
-  wifiManager.process(); // Mantiene activo el portal cautivo
-
-  // Detectar si el WiFi se desconectó luego de haber estado conectado
-  if (!enModoLocal && WiFi.status() == WL_DISCONNECTED) { // si habia wifi & no esta conectado
-    Serial.println("WiFi conectado. Cambiando a modo no local");
+  wifiManager.process();
+  
+  // Check WiFi status changes
+  if (!enModoLocal && WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi desconectado. Cambiando a modo local");
     enModoLocal = true;
-  }else if (enModoLocal && WiFi.status() == WL_CONNECTED){ // si no habia wifi & esta conectado
-    Serial.println("WiFi desconectado. Cambiando a modo local.");
-    enModoLocal = false;    
+  } else if (enModoLocal && WiFi.status() == WL_CONNECTED) {
+    Serial.println("WiFi conectado. Cambiando a modo no local.");
+    enModoLocal = false;
   }
-
-  // ver como arreglar esto
-  //if (!enModoLocal) {
-  //  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
-  //}
 
   unsigned long currentMillis = millis();
 
@@ -175,3 +152,8 @@ void loop() {
 }
 
 #endif  // UNIT_TEST
+
+
+
+
+
