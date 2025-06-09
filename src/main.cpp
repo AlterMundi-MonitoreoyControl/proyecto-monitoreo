@@ -18,6 +18,7 @@
 #include "endpoints.h"
 #include "configFile.h"
 #include "otaUpdater.h"
+#include "configParamsAndCallbacks.h"
 
 unsigned long lastUpdateCheck = 0;
 unsigned long lastSendTime = 0;
@@ -36,7 +37,14 @@ void setup() {
 
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(SSID, PASSWORD);
-    
+
+  #if defined(MODO_SIMULACION)
+    wifiManager.setDebugOutput(true, WM_DEBUG_DEV);
+    wifiManager.debugPlatformInfo();
+  #endif
+
+  configParamsAndCallbacks();
+
   wifiManager.setConfigPortalBlocking(false);
   wifiManager.setConfigPortalTimeout(0);
   

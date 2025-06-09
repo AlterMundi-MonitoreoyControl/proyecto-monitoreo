@@ -1,0 +1,6 @@
+#ifndef CONFIGPARAMSANDCALLBACKS_H
+#define CONFIGPARAMSANDCALLBACKS_H
+
+void configParamsAndCallbacks();
+
+#endif // CONFIGPARAMSANDCALLBACKS_H

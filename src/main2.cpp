@@ -185,8 +185,8 @@ void setup() {
   // WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL); // wifi_sort_method_t sortMethod - WIFI_CONNECT_AP_BY_SIGNAL,WIFI_CONNECT_AP_BY_SECURITY
   // WiFi.setMinSecurity(WIFI_AUTH_WPA2_PSK);
 
-  wm.setDebugOutput(true, WM_DEBUG_DEV);
-  wm.debugPlatformInfo();
+  wm.setDebugOutput(true, WM_DEBUG_DEV); // se puede agregar
+  wm.debugPlatformInfo(); // se puede agregar
 
   //reset settings - for testing
   // wm.resetSettings();
@@ -225,30 +225,30 @@ void setup() {
   </select>
   )";
 
-  WiFiManagerParameter custom_html_inputs(bufferStr);
+  WiFiManagerParameter custom_html_inputs(bufferStr); // se puede agregar
 
   // callbacks
-  wm.setAPCallback(configModeCallback);
-  wm.setWebServerCallback(bindServerCallback);
-  wm.setSaveConfigCallback(saveWifiCallback);
-  wm.setSaveParamsCallback(saveParamCallback);
-  wm.setPreOtaUpdateCallback(handlePreOtaUpdateCallback);
+  wm.setAPCallback(configModeCallback); // se puede agregar
+  wm.setWebServerCallback(bindServerCallback); // se puede agregar
+  wm.setSaveConfigCallback(saveWifiCallback); // se puede agregar
+  wm.setSaveParamsCallback(saveParamCallback); // se puede agregar
+  wm.setPreOtaUpdateCallback(handlePreOtaUpdateCallback); // se puede agregar
 
   // add all your parameters here
-  wm.addParameter(&custom_html);
-  wm.addParameter(&custom_mqtt_server);
-  wm.addParameter(&custom_mqtt_port);
-  wm.addParameter(&custom_token);
-  wm.addParameter(&custom_tokenb);
-  wm.addParameter(&custom_ipaddress);
-  wm.addParameter(&custom_checkbox);
-  wm.addParameter(&custom_input_type);
+  wm.addParameter(&custom_html); // se puede agregar
+  wm.addParameter(&custom_mqtt_server); // se puede agregar
+  wm.addParameter(&custom_mqtt_port); // se puede agregar
+  wm.addParameter(&custom_token); // se puede agregar
+  wm.addParameter(&custom_tokenb); // se puede agregar
+  wm.addParameter(&custom_ipaddress); // se puede agregar
+  wm.addParameter(&custom_checkbox); // se puede agregar
+  wm.addParameter(&custom_input_type); // se puede agregar
 
-  wm.addParameter(&custom_html_inputs);
+  wm.addParameter(&custom_html_inputs); // se puede agregar
 
   // set values later if you want
-  custom_html.setValue("test",4);
-  custom_token.setValue("test",4);
+  custom_html.setValue("test",4); // se puede agregar  
+  custom_token.setValue("test",4); // se puede agregar
 
   // const char* icon = "
   // <link rel='icon' type='image/png' sizes='16x16' href='data:image/png;base64,
@@ -265,11 +265,11 @@ void setup() {
   // wm.setCustomHeadElement(headhtml);
 
   // set custom html menu content , inside menu item "custom", see setMenu()
-  const char* menuhtml = "<form action='/custom' method='get'><button>Custom</button></form><br/>\n";
-  wm.setCustomMenuHTML(menuhtml);
+  const char* menuhtml = "<form action='/custom' method='get'><button>Custom</button></form><br/>\n"; // se puede agregar
+  wm.setCustomMenuHTML(menuhtml); // se puede agregar
 
   // invert theme, dark
-  wm.setDarkMode(true);
+  wm.setDarkMode(true); // se puede agregar
 
   // show scan RSSI as percentage, instead of signal stength graphic
   // wm.setScanDispPerc(true);
@@ -280,7 +280,7 @@ void setup() {
   //wm.setMenu(menu,9); // custom menu array must provide length
 
 
-  std::vector<const char *> menu = {"wifi","wifinoscan","info","param","custom","close","sep","erase","update","restart","exit"};
+  std::vector<const char *> menu = {"wifi","wifinoscan","info","param","custom","close","sep","erase","update","restart","exit"}; // se puede agregar
   // wm.setMenu(menu); // custom menu, pass vector
   
   // wm.setParamsPage(true); // move params to seperate page, not wifi, do not combine with setmenu!
@@ -317,6 +317,8 @@ void setup() {
   // sets wether wm configportal is a blocking loop(legacy) or not, use wm.process() in loop if false
   // wm.setConfigPortalBlocking(false);
   
+
+  // HASTA ACA LLEGAMOOOOOOOOOOOOOOOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS+++++++++++++++++++++++++++++++++++++
   if(!WMISBLOCKING){
     wm.setConfigPortalBlocking(false);
   }
