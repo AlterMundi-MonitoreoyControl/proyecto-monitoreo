@@ -35,7 +35,7 @@ void configParamsAndCallbacks(){
 
   // CALLBACKS
   wifiManager.setAPCallback(configModeCallback); 
-  //wifiManager.setWebServerCallback(bindServerCallback); 
+  wifiManager.setWebServerCallback(bindServerCallback); 
   wifiManager.setSaveConfigCallback(saveWifiCallback); 
   wifiManager.setSaveParamsCallback(saveParamCallback); 
   //wifiManager.setPreOtaUpdateCallback(handlePreOtaUpdateCallback); 

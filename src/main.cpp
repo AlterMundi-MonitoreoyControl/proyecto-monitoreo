@@ -60,11 +60,13 @@ void setup() {
 
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("Conectado a WiFi");
+    Serial.println("Accede a: http://192.168.4.1:8080/actual o http://[IP]:8080/actual , lo mismo para /config");
     Serial.print("STA IP: ");
     Serial.println(WiFi.localIP());
     enModoLocal = false;
   } else {
     Serial.println("No se pudo conectar a WiFi, funcionando en modo local");
+    Serial.println("Accede a: http://192.168.4.1:8080/actual , lo mismo para /config");
     enModoLocal = true;
   }
 
@@ -90,12 +92,7 @@ void setup() {
 
   clientSecure.setInsecure();
 
-  server.on("/actual", HTTP_GET, handleMediciones);
-  server.on("/config", HTTP_GET, handleConfiguracion);
   server.begin();
-  
-  Serial.println("Servidor web iniciado en el puerto 8080"); 
-  Serial.println("Accede a: http://192.168.4.1:8080/actual o http://[IP]:8080/actual");
 
 }
 
@@ -106,9 +103,13 @@ void loop() {
   // Check WiFi status changes
   if (!enModoLocal && WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi desconectado. Cambiando a modo local");
+    Serial.println("Accede a: http://192.168.4.1:8080/actual , lo mismo para /config");
     enModoLocal = true;
   } else if (enModoLocal && WiFi.status() == WL_CONNECTED) {
     Serial.println("WiFi conectado. Cambiando a modo no local.");
+    Serial.println("Accede a: http://192.168.4.1:8080/actual o http://[IP]:8080/actual , lo mismo para /config");
+    Serial.print("STA IP: ");
+    Serial.println(WiFi.localIP());    
     enModoLocal = false;
   }
 
