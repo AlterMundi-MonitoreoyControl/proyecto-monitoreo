@@ -6,7 +6,7 @@
 #include "globals.h"
 
 //WebServer server(80);
-WebServer server(8080);
+//WebServer server(8080);
 Adafruit_SCD30 scd30;
 //WiFiManager wifiManager(&server);
 WiFiManager wifiManager;

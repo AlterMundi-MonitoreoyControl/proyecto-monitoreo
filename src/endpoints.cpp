@@ -46,19 +46,19 @@ void handleMediciones() {
 
     String output;
     serializeJsonPretty(doc, output);
-    server.send(200, "application/json", output);
+    wifiManager.server->send(200, "application/json", output);
 }
 
   
 void handleConfiguracion() {
     File file = SPIFFS.open("/config.json", FILE_READ);
     if (!file || file.isDirectory()) {
-    server.send(500, "application/json", "{\"error\": \"No se pudo abrir config.json\"}");
+    wifiManager.server->send(500, "application/json", "{\"error\": \"No se pudo abrir config.json\"}");
     return;
     }
 
     String json = file.readString(); 
     file.close();
 
-    server.send(200, "application/json", json);
+    wifiManager.server->send(200, "application/json", json);
 }

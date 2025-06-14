@@ -16,11 +16,11 @@ void bindServerCallback(){
   //wifiManager.server->on("/custom",handleRoute);
   // you can override wifiManager route endpoints, I have not found a way to remove handlers, but this would let you disable them or add auth etc.
   // wifiManager.server->on("/info",handleNotFound);
-  // wifiManager.server->on("/update",handleNotFound);
-  //wifiManager.server->on("/erase",handleNotFound); // disable erase
+  wifiManager.server->on("/actual",handleMediciones);
+  wifiManager.server->on("/config",handleConfiguracion); // disable erase
   
-  server.on("/actual", HTTP_GET, handleMediciones);
-  server.on("/config", HTTP_GET, handleConfiguracion);
+  //server.on("/actual", HTTP_GET, handleMediciones);
+  //server.on("/config", HTTP_GET, handleConfiguracion);
 
 }
 
