@@ -7,19 +7,20 @@
 #include "sendDataGrafana.h"
 #include "createGrafanaMessage.h"
 
-
-
-void sendDataGrafana(float temperature, float humidity, float co2) {
+void sendDataGrafana(float temperature, float humidity, float co2, uint32_t heap, uint32_t uptime) {
     if (WiFi.status() == WL_CONNECTED) {
         HTTPClient localHttp;  
 
         localHttp.begin(client, URL);
-        localHttp.setTimeout(5000); // Timeout de 5 segundos
+        localHttp.setTimeout(2000); 
         localHttp.addHeader("Content-Type", "text/plain");
-        localHttp.addHeader("Authorization", "Basic " + String(TOKEN_GRAFANA));
+        char authHeader[128];
+        snprintf(authHeader, sizeof(authHeader), "Basic %s", TOKEN_GRAFANA);
+        localHttp.addHeader("Authorization", authHeader);        
 
-        String data = create_grafana_message(temperature, humidity, co2);
-
+        static char data[128];
+        createGrafanaMessage(data, sizeof(data), temperature, humidity, co2, heap, uptime);
+        
         int httpResponseCode = localHttp.POST(data);
         if (httpResponseCode == 204) {
             Serial.println("Datos enviados correctamente");

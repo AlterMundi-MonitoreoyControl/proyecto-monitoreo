@@ -18,32 +18,69 @@
 #include "endpoints.h"
 #include "configFile.h"
 #include "otaUpdater.h"
+#include "configParamsAndCallbacks.h"
 
 unsigned long lastUpdateCheck = 0;
 unsigned long lastSendTime = 0;
 bool sensorActivo = false;
+bool enModoLocal = false;
 
 #ifndef UNIT_TEST
 
+
 void setup() {
   Serial.begin(115200);
-  
-  wifiManager.setConnectTimeout(30); 
-  wifiManager.autoConnect("ESP32-AP"); 
-  
+
   #if defined(MODO_SIMULACION)
-    Serial.print("Dirección IP asignada: ");  
-    Serial.println(WiFi.localIP());   
+    delay(2000); 
   #endif
 
-  Serial.println("Conectado a WiFi");
-  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP(SSID, PASSWORD);
+
+  #if defined(MODO_SIMULACION)
+    wifiManager.setDebugOutput(true, WM_DEBUG_DEV);
+    wifiManager.debugPlatformInfo();
+  #endif
+
+  configParamsAndCallbacks();
+
+  wifiManager.setConfigPortalBlocking(false);
+  wifiManager.setConfigPortalTimeout(0);
+  
+  WiFi.begin();
+  unsigned long startAttemptTime = millis();
+  const unsigned long wifiTimeout = 10000; // 10 segundos
+  while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < wifiTimeout) {
+    delay(100);
+  }  
+
+  wifiManager.startWebPortal();
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("Conectado a WiFi");
+    Serial.println("Accede a http://[IP]/actual o http://192.168.4.1/actual , lo mismo para /config");
+    Serial.print("STA IP: ");
+    Serial.println(WiFi.localIP());
+    enModoLocal = false;
+  } else {
+    Serial.println("No se pudo conectar a WiFi, funcionando en modo local");
+    Serial.println("Accede a: http://192.168.4.1/actual o http://192.168.4.1/config");
+    enModoLocal = true;
+  }
+
+  if (!enModoLocal) {
+    configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  }
 
   if (!SPIFFS.begin(true)) { 
     Serial.println("Error montando SPIFFS");
   }
 
   createConfigFile(); 
+  String mac = WiFi.macAddress(); 
+  mac.replace(":", "");            
+  snprintf(deviceName, sizeof(deviceName), "moni-%s", mac.c_str());
 
   #if !defined(MODO_SIMULACION)
     sensorActivo = scd30.begin(); 
@@ -52,60 +89,69 @@ void setup() {
     }
   #endif
 
-  clientSecure.setInsecure(); 
-
-  server.on("/actual", HTTP_GET, handleMediciones);
-  server.on("/config", HTTP_GET, handleConfiguracion);
-
-  server.begin();
-  Serial.println("Servidor web iniciado en el puerto 80");
-    
+  clientSecure.setInsecure();
 }
 
 void loop() {
-  server.handleClient();
+  wifiManager.process();
+  
+  if (!enModoLocal && WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi desconectado. Cambiando a modo local");
+    Serial.println("Accede a: http://192.168.4.1/actual o http://192.168.4.1/config");
+    enModoLocal = true;
+  } else if (enModoLocal && WiFi.status() == WL_CONNECTED) {
+    Serial.println("WiFi conectado. Cambiando a modo no local.");
+    Serial.println("Accede a: http://[IP]/actual o http://192.168.4.1/actual , lo mismo para /config");
+    Serial.print("STA IP: ");
+    Serial.println(WiFi.localIP());    
+    enModoLocal = false;
+  }
 
   unsigned long currentMillis = millis();
 
   //// 1. Verificamos si hay que chequear actualizaciones
-  if (currentMillis - lastUpdateCheck >= UPDATE_INTERVAL) {
+  if (!enModoLocal && currentMillis - lastUpdateCheck >= UPDATE_INTERVAL) {
     Serial.printf("Free heap before checking: %d bytes\n", ESP.getFreeHeap());
     checkForUpdates();
     Serial.printf("Free heap after checking: %d bytes\n", ESP.getFreeHeap());
     lastUpdateCheck = currentMillis;
   }
 
-  //// 2. Enviamos datos a Grafana cada 10 segundos
-  if (currentMillis - lastSendTime >= 10000) {
-    lastSendTime = currentMillis;
+  //// 2. Enviamos datos a Grafana cada 10 segundos si no estamos en modo local
+  if(!enModoLocal) {
+    if (currentMillis - lastSendTime >= 10000) {
+      lastSendTime = currentMillis;
 
-    float temperature = 99, humidity = 100, co2 = 999999;
+      float temperature = 99, humidity = 100, co2 = 999999;
 
-    #if defined(MODO_SIMULACION)
-      // Datos simulados
-      temperature = 22.5 + random(-100, 100) * 0.01;
-      humidity = 50 + random(-500, 500) * 0.01;
-      co2 = 400 + random(0, 200);      
-      Serial.println("Enviando datos simulados...");
-    #else
-      if (sensorActivo && scd30.dataReady()) { 
-        if (!scd30.read()) {
-          Serial.println("Error leyendo el sensor!");
-          return;
+      uint32_t uptime = millis() / 1000;
+
+      #if defined(MODO_SIMULACION)
+        // Datos simulados
+        temperature = 22.5 + random(-100, 100) * 0.01;
+        humidity = 50 + random(-500, 500) * 0.01;
+        co2 = 400 + random(0, 200);      
+        Serial.println("Enviando datos simulados...");
+      #else
+        if (sensorActivo && scd30.dataReady()) { 
+          if (!scd30.read()) {
+            Serial.println("Error leyendo el sensor!");
+            return;
+          }
+          temperature = scd30.temperature;
+          humidity = scd30.relative_humidity;
+          co2 = scd30.CO2;
+        } else {
+          Serial.println("Sensor no listo, esperando..."); 
         }
-        temperature = scd30.temperature;
-        humidity = scd30.relative_humidity;
-        co2 = scd30.CO2;
-      } else {
-        Serial.println("Sensor no listo, esperando..."); 
-      }
-    #endif
-
-    Serial.printf("Free heap before sending: %d bytes\n", ESP.getFreeHeap());
-    sendDataGrafana(temperature, humidity, co2);
-    Serial.printf("Free heap after sending: %d bytes\n", ESP.getFreeHeap());
+      #endif
+      uint32_t heap = ESP.getFreeHeap();
+      Serial.printf("Free heap before sending: %d bytes\n", heap);
+      sendDataGrafana(temperature, humidity, co2, heap, uptime);
+      Serial.printf("Free heap after sending: %d bytes\n", ESP.getFreeHeap());
+          
+    }    
   }
-  delay(10);
 }
 
 #endif  // UNIT_TEST

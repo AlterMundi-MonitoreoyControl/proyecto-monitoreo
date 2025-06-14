@@ -5,4 +5,6 @@ const char* TOKEN_GRAFANA = "token:e98697797a6a592e6c886277041e6b95";
 const char* FIRMWARE_BIN_URL = "http://192.168.0.106:8080/bins/SendToGrafana.ino.bin";
 const char* YOUR_GITHUB_USERNAME = "AlterMundi-MonitoreoyControl";
 const char* YOUR_REPO_NAME = "proyecto-monitoreo";
+const char* SSID = "ESP32-SENSOR";
+const char* PASSWORD = "12345678";
 const unsigned long UPDATE_INTERVAL = 3600000;  // 1 hora

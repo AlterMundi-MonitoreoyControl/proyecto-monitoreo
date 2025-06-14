@@ -1,9 +1,21 @@
 #include "createGrafanaMessage.h"
 #include <cstdio>
+#include <ctime>
 
+extern char deviceName[64];
 
-void createGrafanaMessage(char* buffer, size_t bufferSize, const char* device, float temperature, float humidity, float co2, unsigned long long timestamp) {
-    snprintf(buffer, bufferSize,
-             "medicionesCO2,device=%s temp=%.2f,hum=%.2f,co2=%.2f %llu",
-             device, temperature, humidity, co2, timestamp);
+void createGrafanaMessage(char* buffer, size_t bufferSize, float temperature, float humidity, float co2, uint32_t heap, uint32_t uptime) {
+    unsigned long long timestamp = static_cast<unsigned long long>(time(nullptr)) * 1000000000ULL;
+  snprintf(
+      buffer,
+      bufferSize,
+      "medicionesCO2,device=%s temp=%.2f,hum=%.2f,co2=%.0f,heap=%lu,uptime=%lu %llu",
+      deviceName,
+      temperature,
+      humidity,
+      co2,
+      heap,
+      uptime,
+      timestamp
+  );
 }
