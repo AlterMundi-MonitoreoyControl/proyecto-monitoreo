@@ -40,7 +40,7 @@ void configParamsAndCallbacks(){
   wifiManager.setSaveParamsCallback(saveParamCallback); 
   //wifiManager.setPreOtaUpdateCallback(handlePreOtaUpdateCallback); 
 
-  // add all your parameters here:
+  // add parameters here:
   wifiManager.addParameter(&custom_html); 
   wifiManager.addParameter(&custom_mqtt_server); 
   wifiManager.addParameter(&custom_mqtt_port); 
@@ -51,7 +51,7 @@ void configParamsAndCallbacks(){
   wifiManager.addParameter(&custom_checkbox); 
   wifiManager.addParameter(&custom_html_inputs); 
 
-  // set values later if you want
+  // set default values 
   custom_html.setValue("test",4); 
   //custom_token.setValue("test",4); // le pone un valor llamado "test" a ese campo
 
@@ -59,7 +59,6 @@ void configParamsAndCallbacks(){
   const char* menuhtml = "<form action='/custom' method='get'><button>Custom</button></form><br/>\n"; 
   wifiManager.setCustomMenuHTML(menuhtml); 
 
-  // invert theme, dark
   wifiManager.setDarkMode(true);
   
   std::vector<const char *> menu = {"wifi","wifinoscan","info","param","custom","close","sep","erase","update","restart","exit"};

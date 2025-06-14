@@ -8,7 +8,6 @@
 #include <WiFiClient.h>
 #include <HTTPClient.h>
 
-//extern WebServer server;
 extern Adafruit_SCD30 scd30;
 extern WiFiManager wifiManager;
 extern WiFiClientSecure clientSecure;

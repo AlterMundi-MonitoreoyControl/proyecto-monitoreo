@@ -10,4 +10,4 @@ extern const char* SSID;
 extern const char* PASSWORD;
 extern const unsigned long UPDATE_INTERVAL;
 
-#endif
+#endif // CONSTANTS_H
