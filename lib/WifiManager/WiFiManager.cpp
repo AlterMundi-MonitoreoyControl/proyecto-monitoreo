@@ -162,44 +162,6 @@ void WiFiManager::scheduleReconnect()
     LOG_TRACE(msg);
 }
 
-// void WiFiManager::update()
-// {
-//     // Handle validation timer
-//     if (validation_timer > 0 && millis() > validation_timer)
-//     {
-//         validation_timer = 0;
-
-//         if (status.is_transitioning && !online)
-//         {
-//             LOG_ERROR("New credentials validation failed, reverting to previous configuration...");
-//             status.pending_fallback = true;
-
-//             if (!old_ssid.isEmpty())
-//             {
-//                 setNewSSID(old_ssid);
-//                 setPassword(old_password);
-//                 old_ssid = "";
-//                 old_password = "";
-//                 resetState();
-//                 connect();
-//                 saveCredentials();
-//             }
-//         }
-//     }
-
-//     // Handle reconnection timer
-//     if (reconnect_timer > 0 && millis() > reconnect_timer)
-//     {
-//         LOG_ERROR("reconnect timer is over ......................");
-//         reconnect_timer = 0;
-//         connect();
-//     }
-
-//     // Update web server and DNS
-//     if (dnsServer)
-//         dnsServer->processNextRequest();
-// }
-
 void WiFiManager::onWiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info)
 {
     if (!instance)
@@ -401,40 +363,43 @@ void WiFiManager::setupWebServer(WebServer *server)
     // Root page - WiFi configuration interface
     webServer->on("/", [this]()
                   {
-        String html = "<!DOCTYPE html><html><head><title>WiFi Setup</title>";
-        html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
-        html += "<style>body{font-family:Arial,sans-serif;margin:40px auto;max-width:600px;line-height:1.6}";
-        html += "input{width:100%;padding:10px;margin:10px 0;border:1px solid #ddd}";
-        html += "button{background:#007cba;color:white;padding:10px 20px;border:none;cursor:pointer}";
-        html += "button:hover{background:#005a87}</style></head><body>";
-        html += "<h1>WiFi Configuration</h1>";
+        // String html = "<!DOCTYPE html><html><head><title>WiFi Setup</title>";
+        // html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
+        // html += "<style>body{font-family:Arial,sans-serif;margin:40px auto;max-width:600px;line-height:1.6}";
+        // html += "input{width:100%;padding:10px;margin:10px 0;border:1px solid #ddd}";
+        // html += "button{background:#007cba;color:white;padding:10px 20px;border:none;cursor:pointer}";
+        // html += "button:hover{background:#005a87}</style></head><body>";
+        // html += "<h1>WiFi Configuration</h1>";
         
-        // Status
-        html += "<p>Current Status: ";
-        html += online ? "Connected" : "Disconnected";
-        html += "</p>";
+        // // Status
+        // html += "<p>Current Status: ";
+        // html += online ? "Connected" : "Disconnected";
+        // html += "</p>";
         
-        if (online) {
-            html += "<p>Connected to: ";
-            html += station_cfg.ssid;
-            html += "</p>";
-            html += "<p>IP Address: ";
-            html += WiFi.localIP().toString();
-            html += "</p>";
-        }
+        // if (online) {
+        //     html += "<p>Connected to: ";
+        //     html += station_cfg.ssid;
+        //     html += "</p>";
+        //     html += "<p>IP Address: ";
+        //     html += WiFi.localIP().toString();
+        //     html += "</p>";
+        // }
         
-        // Form
-        html += "<form action='/save' method='POST'>";
-        html += "<label>WiFi Network:</label>";
-        html += "<input type='text' name='ssid' placeholder='Enter WiFi SSID' value='";
-        html += station_cfg.ssid;
-        html += "'>";
-        html += "<label>Password:</label>";
-        html += "<input type='password' name='password' placeholder='Enter WiFi Password'>";
-        html += "<button type='submit'>Save & Connect</button>";
-        html += "</form></body></html>";
+        // // Form
+        // html += "<form action='/save' method='POST'>";
+        // html += "<label>WiFi Network:</label>";
+        // html += "<input type='text' name='ssid' placeholder='Enter WiFi SSID' value='";
+        // html += station_cfg.ssid;
+        // html += "'>";
+        // html += "<label>Password:</label>";
+        // html += "<input type='password' name='password' placeholder='Enter WiFi Password'>";
+        // html += "<button type='submit'>Save & Connect</button>";
+        // html += "</form></body></html>";
         
-        webServer->send(200, "text/html", html); });
+        // webServer->send(200, "text/html", html); });
+
+        String html = generateCaptivePortalPage();
+        webServer->send(200, "text/html", html);});
 
     // Save configuration
     webServer->on("/save", HTTP_POST, [this]()
@@ -629,4 +594,191 @@ void WiFiManager::sendScanResults(int networkCount) {
     
     // Limpiar resultados del scan
     WiFi.scanDelete();
+}
+// Método para generar la página del portal cautivo - VERSIÓN COMPILABLE
+String WiFiManager::generateCaptivePortalPage() {
+    String html = "<!DOCTYPE html><html><head><title>WiFi Setup</title>";
+    html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
+    html += "<style>";
+    html += "body{font-family:Arial,sans-serif;margin:20px auto;max-width:600px;line-height:1.6;background-color:#f5f5f5;}";
+    html += ".container{background:white;padding:30px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);}";
+    html += "h1{color:#333;text-align:center;margin-bottom:30px;}";
+    html += ".status{padding:15px;margin:20px 0;border-radius:5px;font-weight:bold;}";
+    html += ".connected{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}";
+    html += ".disconnected{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;}";
+    html += ".scanning{background:#fff3cd;color:#856404;border:1px solid #ffeaa7;}";
+    html += "input,select{width:100%;padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:5px;box-sizing:border-box;}";
+    html += "button{background:#007cba;color:white;padding:12px 20px;border:none;border-radius:5px;cursor:pointer;margin:5px;font-size:16px;}";
+    html += "button:hover{background:#005a87;}button:disabled{background:#ccc;cursor:not-allowed;}";
+    html += ".wifi-section{margin:20px 0;padding:20px;background:#f8f9fa;border-radius:5px;}";
+    html += ".network{padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:5px;cursor:pointer;background:white;transition:all 0.2s;}";
+    html += ".network:hover{background:#e9ecef;border-color:#007cba;}";
+    html += ".network.selected{background:#007cba;color:white;border-color:#005a87;}";
+    html += ".network-name{font-weight:bold;font-size:16px;}";
+    html += ".network-details{font-size:14px;color:#666;margin-top:5px;}";
+    html += ".network.selected .network-details{color:#e9ecef;}";
+    html += ".signal-excellent{color:#28a745;}.signal-good{color:#ffc107;}.signal-fair{color:#fd7e14;}.signal-weak{color:#dc3545;}";
+    html += ".loading{text-align:center;padding:20px;color:#666;}";
+    html += ".form-section{margin-top:30px;padding-top:20px;border-top:1px solid #ddd;}";
+    html += "</style></head><body>";
+    
+    html += "<div class='container'>";
+    html += "<h1>WiFi Configuration</h1>";
+    
+    // Status
+    html += "<div id='status' class='status ";
+    if (online) {
+        html += "connected'>Connected to: " + station_cfg.ssid;
+        html += "<br>IP Address: " + WiFi.localIP().toString();
+    } else {
+        html += "disconnected'>Disconnected - Please configure WiFi";
+    }
+    html += "</div>";
+    
+    // WiFi Section
+    html += "<div class='wifi-section'>";
+    html += "<h3>Available Networks</h3>";
+    html += "<button onclick='scanNetworks()' id='scanBtn'>Scan for Networks</button>";
+    html += "<div id='networks' class='loading'>Click \"Scan for Networks\" to see available WiFi networks</div>";
+    html += "</div>";
+    
+    // Form Section
+    html += "<div class='form-section'>";
+    html += "<h3>Manual Configuration</h3>";
+    html += "<form action='/save' method='POST'>";
+    html += "<label>WiFi Network:</label>";
+    html += "<input type='text' name='ssid' id='ssid' placeholder='Enter WiFi SSID' value='";
+    html += station_cfg.ssid;
+    html += "' required>";
+    html += "<label>Password:</label>";
+    html += "<input type='password' name='password' id='password' placeholder='Enter WiFi Password (leave empty for open networks)'>";
+    html += "<button type='submit'>Save & Connect</button>";
+    html += "</form></div></div>";
+    
+    // JavaScript - dividido en partes más pequeñas
+    html += "<script>";
+    html += "let scanInProgress = false;";
+    html += "let selectedNetwork = '';";
+    
+    // Función scanNetworks
+    html += "async function scanNetworks() {";
+    html += "if (scanInProgress) return;";
+    html += "const btn = document.getElementById('scanBtn');";
+    html += "const networksDiv = document.getElementById('networks');";
+    html += "btn.disabled = true;";
+    html += "btn.innerHTML = 'Scanning...';";
+    html += "networksDiv.innerHTML = '<div class=\"loading\">Scanning for WiFi networks...</div>';";
+    html += "scanInProgress = true;";
+    html += "try {";
+    html += "const response = await fetch('/wifi');";
+    html += "const data = await response.json();";
+    html += "if (data.message === 'success' && data.networks) {";
+    html += "displayNetworks(data.networks);";
+    html += "} else if (data.message === 'scan in progress') {";
+    html += "setTimeout(checkScanProgress, 1000);";
+    html += "return;";
+    html += "} else {";
+    html += "throw new Error(data.message || 'Scan failed');";
+    html += "}";
+    html += "} catch (error) {";
+    html += "networksDiv.innerHTML = '<div style=\"color:red; padding:20px; text-align:center;\">Error: ' + error.message + '</div>';";
+    html += "}";
+    html += "btn.disabled = false;";
+    html += "btn.innerHTML = 'Scan for Networks';";
+    html += "scanInProgress = false;";
+    html += "}";
+    
+    // Función checkScanProgress
+    html += "async function checkScanProgress() {";
+    html += "try {";
+    html += "const response = await fetch('/wifi');";
+    html += "const data = await response.json();";
+    html += "if (data.message === 'success' && data.networks) {";
+    html += "displayNetworks(data.networks);";
+    html += "document.getElementById('scanBtn').disabled = false;";
+    html += "document.getElementById('scanBtn').innerHTML = 'Scan for Networks';";
+    html += "scanInProgress = false;";
+    html += "} else if (data.message === 'scan in progress') {";
+    html += "setTimeout(checkScanProgress, 1000);";
+    html += "} else {";
+    html += "throw new Error(data.message || 'Scan failed');";
+    html += "}";
+    html += "} catch (error) {";
+    html += "document.getElementById('networks').innerHTML = '<div style=\"color:red; padding:20px; text-align:center;\">Error: ' + error.message + '</div>';";
+    html += "document.getElementById('scanBtn').disabled = false;";
+    html += "document.getElementById('scanBtn').innerHTML = 'Scan for Networks';";
+    html += "scanInProgress = false;";
+    html += "}";
+    html += "}";
+    
+    // Función displayNetworks
+    html += "function displayNetworks(networks) {";
+    html += "const networksDiv = document.getElementById('networks');";
+    html += "if (networks.length === 0) {";
+    html += "networksDiv.innerHTML = '<div style=\"text-align:center; padding:20px; color:#666;\">No networks found</div>';";
+    html += "return;";
+    html += "}";
+    html += "let html = '';";
+    html += "networks.sort((a, b) => b.rssi - a.rssi);";
+    html += "networks.forEach((network, index) => {";
+    html += "const signalStrength = getSignalStrength(network.rssi);";
+    html += "const signalClass = getSignalClass(network.rssi);";
+    html += "const isSecure = network.secure === true;";
+    html += "const lockIcon = isSecure ? ' [Secured]' : ' [Open]';";
+    html += "html += '<div class=\"network\" onclick=\"selectNetwork(\\'' + escapeHtml(network.ssid) + '\\', ' + isSecure + ')\">';";
+    html += "html += '<div class=\"network-name\">' + escapeHtml(network.ssid) + '<span style=\"font-size:12px;color:' + (isSecure ? '#dc3545' : '#28a745') + ';\">' + lockIcon + '</span></div>';";
+    html += "html += '<div class=\"network-details ' + signalClass + '\">Signal: ' + signalStrength + ' (' + network.rssi + ' dBm)</div>';";
+    html += "html += '</div>';";
+    html += "});";
+    html += "networksDiv.innerHTML = html;";
+    html += "}";
+    
+    // Funciones auxiliares
+    html += "function getSignalStrength(rssi) {";
+    html += "if (rssi > -50) return 'Excellent';";
+    html += "if (rssi > -60) return 'Good';";
+    html += "if (rssi > -70) return 'Fair';";
+    html += "return 'Weak';";
+    html += "}";
+    
+    html += "function getSignalClass(rssi) {";
+    html += "if (rssi > -50) return 'signal-excellent';";
+    html += "if (rssi > -60) return 'signal-good';";
+    html += "if (rssi > -70) return 'signal-fair';";
+    html += "return 'signal-weak';";
+    html += "}";
+    
+    html += "function selectNetwork(ssid, isSecure) {";
+    html += "document.getElementById('ssid').value = ssid;";
+    html += "const passwordField = document.getElementById('password');";
+    html += "if (isSecure === false) {";
+    html += "passwordField.value = '';";
+    html += "passwordField.placeholder = 'No password required (open network)';";
+    html += "passwordField.style.backgroundColor = '#f0f8ff';";
+    html += "} else {";
+    html += "passwordField.placeholder = 'Enter WiFi Password';";
+    html += "passwordField.style.backgroundColor = '';";
+    html += "passwordField.focus();";
+    html += "}";
+    html += "document.querySelectorAll('.network').forEach(n => n.classList.remove('selected'));";
+    html += "event.target.closest('.network').classList.add('selected');";
+    html += "selectedNetwork = ssid;";
+    html += "}";
+    
+    html += "function escapeHtml(text) {";
+    html += "const div = document.createElement('div');";
+    html += "div.textContent = text;";
+    html += "return div.innerHTML;";
+    html += "}";
+    
+    // Auto-scan si no está conectado
+    html += "window.onload = function() {";
+    if (!online) {
+        html += "setTimeout(scanNetworks, 500);";
+    }
+    html += "};";
+    
+    html += "</script></body></html>";
+    
+    return html;
 }

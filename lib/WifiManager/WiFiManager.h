@@ -75,6 +75,7 @@ private:
     void handleWiFiEvent();
     void setupWebServer(WebServer* server) ;
     void setupDNS();
+    String generateCaptivePortalPage();
     String getMacAddress();
     void setupNTP();
     void saveCredentials();
