@@ -100,13 +100,10 @@ void WiFiManager::onChange(const String &new_ssid, const String &new_password)
         config_changed = setNewSSID(new_ssid);
     }
 
-    if (!new_password.isEmpty() && new_password != station_cfg.password)
+    if (!new_ssid.isEmpty() && new_password != station_cfg.password)
     {
-        if (old_ssid.isEmpty())
-        {
-            old_ssid = station_cfg.ssid;
-            old_password = station_cfg.password;
-        }
+        old_ssid = station_cfg.ssid;
+        old_password = station_cfg.password;
         config_changed = setPassword(new_password) || config_changed;
     }
 
@@ -137,6 +134,7 @@ bool WiFiManager::setNewSSID(const String &new_ssid)
 bool WiFiManager::setPassword(const String &new_password)
 {
     station_cfg.password = new_password;
+    LOG_TRACE("Password updated:/"+new_password+"/");
     return true;
 }
 
