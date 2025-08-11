@@ -5,6 +5,7 @@
 #include <SPIFFS.h>
 #include "endpoints.h"
 #include "globals.h"
+#include "configFile.h"
 
 #include <ArduinoJson.h>
 
@@ -52,14 +53,45 @@ void handleMediciones() {
 
   
 void handleConfiguracion() {
-    File file = SPIFFS.open("/config.json", FILE_READ);
-    if (!file || file.isDirectory()) {
+    String jsonfile = getConfigFile();
+    if (jsonfile.isEmpty()) {
     server.send(500, "application/json", "{\"error\": \"No se pudo abrir config.json\"}");
-    return;
     }
-
-    String json = file.readString(); 
-    file.close();
-
-    server.send(200, "application/json", json);
+    else
+    {
+    server.send(200, "application/json", jsonfile);
+    }
 }
+
+void habldePostConfig() {
+    Serial.println("set config ... ");
+    
+    if (server.hasArg("plain")) {
+      String jsonString = server.arg("plain");
+      JsonDocument doc;
+      DeserializationError error = deserializeJson(doc, jsonString);
+
+      if (error) {
+        Serial.print("deserializeJson() failed: ");
+        Serial.println(error.c_str());
+        server.send(400, "text/plain", "Invalid JSON format");
+        return;
+      }
+
+      // Extract SSID and password from JSON
+      const char* new_ssid = doc["ssid"];
+      const char* new_password = doc["passwd"];
+
+      if (new_ssid && strlen(new_ssid) > 0 && strcmp(new_ssid, "ToChange") != 0) {
+        wifiManager.onChange(String(new_ssid), String(new_password));
+        Serial.printf("New SSID: %s\n, new password %s \n", new_ssid, new_password);
+        server.send(200, "text/plain", "Configuration updated. Attempting to connect to " + String(new_ssid));
+      } else {
+        Serial.printf("SSID is empty in received JSON\n");
+        server.send(400, "text/plain", "SSID cannot be empty");
+      }
+    } else {
+      Serial.println("no json");
+      server.send(400, "text/plain", "No JSON data received");
+    }
+  }

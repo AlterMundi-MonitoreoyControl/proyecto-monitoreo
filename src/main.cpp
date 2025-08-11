@@ -28,8 +28,6 @@ bool sensorActivo = false;
 void setup() {
   Serial.begin(115200);
   
-  wifiManager.setConnectTimeout(30); 
-  wifiManager.autoConnect("ESP32-AP"); 
   
   #if defined(MODO_SIMULACION)
     Serial.print("Dirección IP asignada: ");  
@@ -56,6 +54,29 @@ void setup() {
 
   server.on("/actual", HTTP_GET, handleMediciones);
   server.on("/config", HTTP_GET, handleConfiguracion);
+  server.on("/config", HTTP_POST, habldePostConfig);
+    // Add handler for undefined routes
+  server.onNotFound([]() {
+      // Redirect all undefined routes to root page
+      Serial.println("Redirecting to root page for undefined route");
+      Serial.printf("Requested route: %s\n", server.uri().c_str());
+      server.sendHeader("Location", "/", true);
+      server.send(302, "text/plain", "");
+  });
+
+
+
+  server.enableCORS(true);
+
+  // Optional: Configure timeouts and retries
+  wifiManager.setConnectionTimeout(15000);  // 15 seconds
+  wifiManager.setMaxRetries(8);
+  wifiManager.setValidationTimeout(30000);  // 30 seconds
+  wifiManager.init(&server);
+    
+  Serial.println("Setup complete!");
+  Serial.println("Access Point: " + wifiManager.getAPSSID());
+  Serial.println("Connect to the AP and go to http://192.168.16.10 to configure WiFi");
 
   server.begin();
   Serial.println("Servidor web iniciado en el puerto 80");
@@ -63,6 +84,18 @@ void setup() {
 }
 
 void loop() {
+  wifiManager.update();
+  static unsigned long lastStatusPrint = 0;
+  if (millis() - lastStatusPrint > 30000) {  // Print status every 30 seconds
+      lastStatusPrint = millis();
+      
+      if (wifiManager.isOnline()) {
+          Serial.println("WiFi Status: Connected to " + wifiManager.getCurrentSSID());
+          Serial.println("IP Address: " + wifiManager.getLocalIP().toString());
+      } else {
+          Serial.println("WiFi Status: Disconnected - AP available at " + wifiManager.getAPSSID());
+      }
+  }
   server.handleClient();
 
   unsigned long currentMillis = millis();

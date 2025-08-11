@@ -3,5 +3,6 @@
 
 void handleMediciones();
 void handleConfiguracion();
+void habldePostConfig();
 
 #endif // ENDPOINTS_H

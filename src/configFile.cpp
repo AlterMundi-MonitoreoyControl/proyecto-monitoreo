@@ -6,19 +6,20 @@
 #include "globals.h"
 #include "constants.h"
 
+
+
 void createConfigFile() {
-    const char* path = "/config.json";
     
     //SPIFFS.remove(path);
 
-    if (SPIFFS.exists(path)) {
+    if (SPIFFS.exists(CONFIG_FILE_PATH)) {
       Serial.println("Archivo de configuración ya existe.");
       return;
     }
   
     Serial.println("Creando archivo de configuración...");
   
-    File file = SPIFFS.open(path, FILE_WRITE);
+    File file = SPIFFS.open(CONFIG_FILE_PATH, FILE_WRITE);
     if (!file) {
       Serial.println("Error al abrir config.json para escritura.");
       return;
@@ -51,3 +52,15 @@ void createConfigFile() {
   
     file.close();
   }
+
+  String getConfigFile() {
+    File file = SPIFFS.open(CONFIG_FILE_PATH, FILE_READ);
+    if (!file || file.isDirectory()) {
+        Serial.println("Error al abrir config.json");
+        return String();
+    }
+    String json = file.readString();
+    file.close();
+    return json;
+  }
+

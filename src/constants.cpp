@@ -6,3 +6,4 @@ const char* FIRMWARE_BIN_URL = "http://192.168.0.106:8080/bins/SendToGrafana.ino
 const char* YOUR_GITHUB_USERNAME = "AlterMundi-MonitoreoyControl";
 const char* YOUR_REPO_NAME = "proyecto-monitoreo";
 const unsigned long UPDATE_INTERVAL = 3600000;  // 1 hora
+const char* CONFIG_FILE_PATH = "/config.json";
