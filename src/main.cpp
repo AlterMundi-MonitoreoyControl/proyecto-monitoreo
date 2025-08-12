@@ -55,6 +55,7 @@ void setup() {
   server.on("/actual", HTTP_GET, handleMediciones);
   server.on("/config", HTTP_GET, handleConfiguracion);
   server.on("/config", HTTP_POST, habldePostConfig);
+  server.on("/data", HTTP_GET,handleData);
     // Add handler for undefined routes
   server.onNotFound([]() {
       // Redirect all undefined routes to root page

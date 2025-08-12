@@ -326,12 +326,16 @@ void WiFiManager::setupWebServer(WebServer *server)
     pauseReconnection();
     
     // Detener cualquier intento de conexión actual
-    WiFi.disconnect();
-    delay(100);  // Pequeña pausa para que se establezca el estado
-    
-    // Reiniciar WiFi en modo AP+STA para asegurar estado limpio
-    WiFi.mode(WIFI_AP_STA);
-    delay(100);
+    if(!online) {
+        LOG_TRACE("WiFi is offline, disconnecting to reset state");
+        WiFi.disconnect();
+        delay(100);  // Pequeña pausa para que se establezca el estado
+        // Reiniciar WiFi en modo AP+STA para asegurar estado limpio
+        WiFi.mode(WIFI_AP_STA);
+        delay(100);
+    }   
+ 
+
     
     // Iniciar scan asíncrono
     LOG_TRACE("Starting async WiFi scan after reconnection pause");
@@ -363,40 +367,7 @@ void WiFiManager::setupWebServer(WebServer *server)
     // Root page - WiFi configuration interface
     webServer->on("/", [this]()
                   {
-        // String html = "<!DOCTYPE html><html><head><title>WiFi Setup</title>";
-        // html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
-        // html += "<style>body{font-family:Arial,sans-serif;margin:40px auto;max-width:600px;line-height:1.6}";
-        // html += "input{width:100%;padding:10px;margin:10px 0;border:1px solid #ddd}";
-        // html += "button{background:#007cba;color:white;padding:10px 20px;border:none;cursor:pointer}";
-        // html += "button:hover{background:#005a87}</style></head><body>";
-        // html += "<h1>WiFi Configuration</h1>";
-        
-        // // Status
-        // html += "<p>Current Status: ";
-        // html += online ? "Connected" : "Disconnected";
-        // html += "</p>";
-        
-        // if (online) {
-        //     html += "<p>Connected to: ";
-        //     html += station_cfg.ssid;
-        //     html += "</p>";
-        //     html += "<p>IP Address: ";
-        //     html += WiFi.localIP().toString();
-        //     html += "</p>";
-        // }
-        
-        // // Form
-        // html += "<form action='/save' method='POST'>";
-        // html += "<label>WiFi Network:</label>";
-        // html += "<input type='text' name='ssid' placeholder='Enter WiFi SSID' value='";
-        // html += station_cfg.ssid;
-        // html += "'>";
-        // html += "<label>Password:</label>";
-        // html += "<input type='password' name='password' placeholder='Enter WiFi Password'>";
-        // html += "<button type='submit'>Save & Connect</button>";
-        // html += "</form></body></html>";
-        
-        // webServer->send(200, "text/html", html); });
+      
 
         String html = generateCaptivePortalPage();
         webServer->send(200, "text/html", html);});
@@ -503,9 +474,16 @@ void WiFiManager::printStatus()
 
 // Método para pausar la reconexión
 void WiFiManager::pauseReconnection() {
+    if (online)
+    {
+    LOG_TRACE("Reconnection not paused for WiFi scan");
+
+    }else
+    {
     reconnect_paused = true;
     reconnect_timer = 0; // Cancelar timer de reconexión pendiente
     LOG_TRACE("Reconnection paused for WiFi scan");
+    }
 }
 
 // Método para reanudar la reconexión
@@ -556,7 +534,7 @@ void WiFiManager::update() {
     }
 
     // Handle reconnection timer - SOLO SI NO ESTÁ PAUSADO
-    if (!reconnect_paused && reconnect_timer > 0 && millis() > reconnect_timer) {
+    if (!online && !reconnect_paused && reconnect_timer > 0 && millis() > reconnect_timer) {
         LOG_ERROR("reconnect timer is over ......................");
         reconnect_timer = 0;
         connect();
@@ -624,7 +602,8 @@ String WiFiManager::generateCaptivePortalPage() {
     
     html += "<div class='container'>";
     html += "<h1>WiFi Configuration</h1>";
-    
+    html += "<button onclick=\"window.location.href='/data'\">View Sensor Data</button>";
+
     // Status
     html += "<div id='status' class='status ";
     if (online) {

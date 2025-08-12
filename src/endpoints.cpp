@@ -51,7 +51,51 @@ void handleMediciones() {
     server.send(200, "application/json", output);
 }
 
-  
+void handleData() {
+      float temperature = 99, humidity = 100, co2 = 999999, presion = 99;
+    String wifiStatus = "unknown";
+    bool rotation = false;
+    
+    #if defined(MODO_SIMULACION)
+        temperature = 22.5 + random(-100, 100) * 0.01;
+        humidity = 50 + random(-500, 500) * 0.01;
+        co2 = 400 + random(0, 200);
+        presion = 850 + random(-100, 100) * 0.01;
+        wifiStatus = "disconnected";
+        rotation = false;
+    #else
+        if (scd30.dataReady() && scd30.read()) {
+            temperature = scd30.temperature;
+            humidity = scd30.relative_humidity;
+            co2 = scd30.CO2;
+            wifiStatus = (WiFi.status() == WL_CONNECTED) ? "connected" : "disconnected";
+        }
+    #endif
+  String html = "<!DOCTYPE html><html><head>";
+  html += "<meta charset='UTF-8'>";
+  html += "<meta http-equiv='refresh' content='10'>"; // refresh every 10 seconds
+  html += "<title>Sensor Data</title>";
+  html += "<style>";
+  html += "body{font-family:Arial, sans-serif; text-align:center; background:#f4f4f4;}";
+  html += "h1{color:#333;}";
+  html += "table{margin:auto; border-collapse:collapse;}";
+  html += "td,th{padding:8px 15px; border:1px solid #ccc;}";
+  html += "</style></head><body>";
+  html += "<h1>SCD30 Sensor Data</h1>";
+  html += "<table>";
+  html += "<tr><th>Temperature (°C)</th><th>Humidity (%)</th><th>CO₂ (ppm)</th><th>wifi</th></tr>";
+  html += "<tr>";
+  html += "<td>" + String(temperature, 2) + "</td>";
+  html += "<td>" + String(humidity, 2) + "</td>";
+  html += "<td>" + String(co2, 2) + "</td>";
+  html += "<td>" + wifiStatus + "</td>";
+  html += "</tr></table>";
+  html += "<p>Last update: " + String(millis() / 1000) + "s since start</p>";
+  html += "</body></html>";
+
+  server.send(200, "text/html", html);
+}
+
 void handleConfiguracion() {
     String jsonfile = getConfigFile();
     if (jsonfile.isEmpty()) {
