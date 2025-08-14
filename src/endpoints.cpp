@@ -139,3 +139,68 @@ void habldePostConfig() {
       server.send(400, "text/plain", "No JSON data received");
     }
   }
+
+void handleSCD30Calibration() {
+  Serial.println("Endpoint /calibrate-scd30 called");
+  
+  String response = "{";
+  int httpStatus = 200;
+  
+  #if defined(MODO_SIMULACION)
+      // En modo simulación, simular la respuesta
+      response += "\"status\":\"simulated\",";
+      response += "\"message\":\"Simulation mode - calibration simulated\",";
+      response += "\"sensor_detected\":false,";
+      response += "\"calibration_performed\":true,";
+      response += "\"target_co2\":400";
+  #else
+          try {
+              // Verificar que el sensor esté disponible
+              if (!scd30.begin()) {
+                  response += "\"status\":\"error\",";
+                  response += "\"message\":\"Failed to communicate with SCD30 sensor\",";
+                  response += "\"sensor_detected\":false,";
+                  response += "\"calibration_performed\":false";
+                  httpStatus = 503;
+              } else {
+                  Serial.println("SCD30 detected, attempting forced recalibration to 400 ppm...");
+                  
+                        
+                  // Forzar recalibración a 400 ppm
+                  bool calibrationSuccess = scd30.forceRecalibrationWithReference(400);
+                  delay(100);
+
+                  
+                  if (calibrationSuccess) {
+                      response += "\"status\":\"success\",";
+                      response += "\"message\":\"SCD30 calibration completed successfully\",";
+                      response += "\"sensor_detected\":true,";
+                      response += "\"calibration_performed\":true,";
+                      response += "\"target_co2\":400,";
+                      response += "\"note\":\"Allow 2-3 minutes for sensor to stabilize after calibration\"";
+                      Serial.println("SCD30 calibration successful!");
+                  } else {
+                      response += "\"status\":\"error\",";
+                      response += "\"message\":\"SCD30 calibration failed - sensor may be busy or in error state\",";
+                      response += "\"sensor_detected\":true,";
+                      response += "\"calibration_performed\":false";
+                      httpStatus = 500; // Internal Server Error
+                      Serial.println("SCD30 calibration failed!");
+                  }
+              }
+          } catch (...) {
+              response += "\"status\":\"error\",";
+              response += "\"message\":\"Exception occurred during calibration\",";
+              response += "\"sensor_detected\":true,";
+              response += "\"calibration_performed\":false";
+              httpStatus = 500;
+              Serial.println("Exception during SCD30 calibration");
+          }
+      
+  #endif
+  
+  response += "}";
+  
+  server.send(httpStatus, "application/json", response);
+  Serial.println("Calibration response sent: " + response);
+}

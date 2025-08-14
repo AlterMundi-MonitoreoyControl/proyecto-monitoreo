@@ -56,6 +56,7 @@ void setup() {
   server.on("/config", HTTP_GET, handleConfiguracion);
   server.on("/config", HTTP_POST, habldePostConfig);
   server.on("/data", HTTP_GET,handleData);
+  server.on("/calibrate-scd30", HTTP_GET, handleSCD30Calibration);
     // Add handler for undefined routes
   server.onNotFound([]() {
       // Redirect all undefined routes to root page
