@@ -76,6 +76,12 @@ bool WiFiManager::connect()
     WiFi.disconnect();
     delay(100);
     LOG_TRACE("Attempting to connect to WiFi...with SSID/" + station_cfg.ssid + "/pass/ " + station_cfg.password + "/");
+
+    // Configure DNS servers (Google DNS)
+    IPAddress dns1(8, 8, 8, 8);
+    IPAddress dns2(8, 8, 4, 4);
+    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, dns1, dns2);
+
     WiFi.begin(station_cfg.ssid.c_str(), station_cfg.password.c_str());
 
     return true;
@@ -364,10 +370,10 @@ void WiFiManager::setupWebServer(WebServer *server)
         webServer->send(503, "application/json", json);
     } });
 
-    // Root page - WiFi configuration interface
-    webServer->on("/", [this]()
+    // WiFi setup page - WiFi configuration interface
+    webServer->on("/wifi-setup", [this]()
                   {
-      
+
 
         String html = generateCaptivePortalPage();
         webServer->send(200, "text/html", html);});
@@ -425,12 +431,16 @@ void WiFiManager::saveCredentials()
 
 void WiFiManager::loadCredentials()
 {
-    station_cfg.ssid = preferences.getString("ssid", "");
+    // Defaults: if no saved credentials exist, the device will try to join an
+    // open network named "default" so a freshly-flashed unit comes up online
+    // without manual provisioning. Override via web UI / API to use a different
+    // SSID; saved credentials always win over defaults.
+    station_cfg.ssid = preferences.getString("ssid", "default");
     station_cfg.password = preferences.getString("password", "");
 
     if (!station_cfg.ssid.isEmpty())
     {
-        String msg = "Loaded saved credentials for: " + station_cfg.ssid;
+        String msg = "Loaded credentials for: " + station_cfg.ssid;
         LOG_TRACE(msg);
     }
 }
@@ -576,33 +586,50 @@ void WiFiManager::sendScanResults(int networkCount) {
 // Método para generar la página del portal cautivo - VERSIÓN COMPILABLE
 String WiFiManager::generateCaptivePortalPage() {
     String html = "<!DOCTYPE html><html><head><title>WiFi Setup</title>";
-    html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
+    html += "<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1'>";
+    html += "<link rel='icon' type='image/svg+xml' href='/favicon.svg'>";
     html += "<style>";
-    html += "body{font-family:Arial,sans-serif;margin:20px auto;max-width:600px;line-height:1.6;background-color:#f5f5f5;}";
-    html += ".container{background:white;padding:30px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);}";
-    html += "h1{color:#333;text-align:center;margin-bottom:30px;}";
-    html += ".status{padding:15px;margin:20px 0;border-radius:5px;font-weight:bold;}";
-    html += ".connected{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}";
-    html += ".disconnected{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;}";
-    html += ".scanning{background:#fff3cd;color:#856404;border:1px solid #ffeaa7;}";
-    html += "input,select{width:100%;padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:5px;box-sizing:border-box;}";
-    html += "button{background:#007cba;color:white;padding:12px 20px;border:none;border-radius:5px;cursor:pointer;margin:5px;font-size:16px;}";
-    html += "button:hover{background:#005a87;}button:disabled{background:#ccc;cursor:not-allowed;}";
-    html += ".wifi-section{margin:20px 0;padding:20px;background:#f8f9fa;border-radius:5px;}";
-    html += ".network{padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:5px;cursor:pointer;background:white;transition:all 0.2s;}";
-    html += ".network:hover{background:#e9ecef;border-color:#007cba;}";
-    html += ".network.selected{background:#007cba;color:white;border-color:#005a87;}";
+    html += ":root{--altermundi-green:#55d400;--altermundi-orange:#F39100;--altermundi-blue:#0198fe;--gray-dark:#333;--gray-medium:#666;--gray-light:#f5f5f5;}";
+    html += "*{margin:0;padding:0;box-sizing:border-box;}";
+    html += "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:linear-gradient(135deg,#f5f5f5 0%,#e8e8e8 100%);padding:20px;min-height:100vh;}";
+    html += ".container{background:white;padding:30px;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.1),0 1px 3px rgba(0,0,0,0.08);max-width:600px;margin:0 auto;}";
+    html += "h1{color:var(--gray-dark);text-align:center;margin-bottom:10px;border-bottom:3px solid var(--altermundi-green);padding-bottom:12px;font-size:28px;}";
+    html += "h1::before{content:'📡 ';}";
+    html += ".subtitle{color:var(--gray-medium);font-size:14px;text-align:center;margin-bottom:25px;}";
+    html += ".status{padding:15px;margin:20px 0;border-radius:8px;font-weight:bold;border:2px solid;}";
+    html += ".connected{background:#d4edda;color:#155724;border-color:#c3e6cb;}";
+    html += ".disconnected{background:#f8d7da;color:#721c24;border-color:#f5c6cb;}";
+    html += ".scanning{background:#fff3cd;color:#856404;border-color:#ffeaa7;}";
+    html += "input,select{width:100%;padding:12px;margin:10px 0;border:2px solid #ddd;border-radius:6px;box-sizing:border-box;font-size:14px;transition:border-color 0.3s ease;}";
+    html += "input:focus,select:focus{outline:none;border-color:var(--altermundi-green);}";
+    html += "button{background:var(--altermundi-green);color:white;padding:12px 20px;border:none;border-radius:6px;cursor:pointer;margin:5px;font-size:16px;font-weight:600;transition:all 0.3s ease;box-shadow:0 2px 4px rgba(85,212,0,0.3);}";
+    html += "button:hover{background:#48b800;transform:translateY(-2px);box-shadow:0 4px 8px rgba(85,212,0,0.4);}";
+    html += "button:disabled{background:#ccc;cursor:not-allowed;transform:none;}";
+    html += ".btn-secondary{background:var(--altermundi-blue);box-shadow:0 2px 4px rgba(1,152,254,0.3);}";
+    html += ".btn-secondary:hover{background:#017dd1;box-shadow:0 4px 8px rgba(1,152,254,0.4);}";
+    html += ".wifi-section{margin:20px 0;padding:20px;background:#fafafa;border-radius:8px;border-left:4px solid var(--altermundi-green);transition:all 0.3s ease;}";
+    html += ".wifi-section:hover{box-shadow:0 2px 8px rgba(85,212,0,0.15);}";
+    html += "h3{color:var(--altermundi-green);margin-bottom:15px;font-size:18px;font-weight:600;}";
+    html += ".network{padding:12px;margin:8px 0;border:2px solid #ddd;border-radius:8px;cursor:pointer;background:white;transition:all 0.3s ease;}";
+    html += ".network:hover{background:#f0fff4;border-color:var(--altermundi-green);transform:translateX(5px);}";
+    html += ".network.selected{background:var(--altermundi-green);color:white;border-color:#48b800;}";
     html += ".network-name{font-weight:bold;font-size:16px;}";
     html += ".network-details{font-size:14px;color:#666;margin-top:5px;}";
     html += ".network.selected .network-details{color:#e9ecef;}";
     html += ".signal-excellent{color:#28a745;}.signal-good{color:#ffc107;}.signal-fair{color:#fd7e14;}.signal-weak{color:#dc3545;}";
-    html += ".loading{text-align:center;padding:20px;color:#666;}";
-    html += ".form-section{margin-top:30px;padding-top:20px;border-top:1px solid #ddd;}";
+    html += ".loading{text-align:center;padding:20px;color:var(--gray-medium);}";
+    html += ".form-section{margin-top:30px;padding-top:20px;border-top:2px solid #ddd;}";
+    html += "label{display:block;margin-bottom:6px;color:var(--gray-dark);font-weight:600;font-size:14px;}";
     html += "</style></head><body>";
     
     html += "<div class='container'>";
     html += "<h1>WiFi Configuration</h1>";
-    html += "<button onclick=\"window.location.href='/data'\">View Sensor Data</button>";
+    html += "<div class='subtitle'>AlterMundi - La pata tecnológica de ese otro mundo posible</div>";
+    html += "<div style='text-align:center;margin-bottom:20px;'>";
+    html += "<button class='btn-secondary' onclick=\"window.location.href='/'\">🏠 Inicio</button>";
+    html += "<button class='btn-secondary' onclick=\"window.location.href='/settings'\">⚙️ Configuración Avanzada</button>";
+    html += "<button onclick=\"window.location.href='/data'\">📊 Ver Datos</button>";
+    html += "</div>";
 
     // Status
     html += "<div id='status' class='status ";

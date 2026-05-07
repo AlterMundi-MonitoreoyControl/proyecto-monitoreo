@@ -4,3 +4,17 @@
 .vscode/launch.json
 .vscode/ipch
 build_simulation.bat
+
+# Archivos privados con credenciales
+include/constants_private.h
+
+# Generados por PlatformIO/IDE
+compile_commands.json
+
+# Claude Code
+.claude/
+
+# Build reports (generados por CI) deben ser incluidos no descomentar esta línea
+# build_reports/
+tools/venv
+tools/__pycache__

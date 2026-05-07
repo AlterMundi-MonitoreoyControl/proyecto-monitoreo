@@ -1,106 +1,158 @@
+#include "otaUpdater.h"
+#include "constants.h"
+#include "debug.h"
+#include "globals.h"
+#include "version.h"
 #include <Arduino.h>
 #include <HTTPClient.h>
-#include <HTTPUpdate.h>  
-#include <WiFiClientSecure.h>  
+#include <HTTPUpdate.h>
+#include <WiFiClientSecure.h>
 #include <esp_ota_ops.h>
-#include "version.h"
-#include "otaUpdater.h"
-#include "globals.h"
-#include "constants.h"
 
-String getLatestReleaseTag(const char* repoOwner, const char* repoName) {
-    HTTPClient http; 
-    String apiUrl = "https://api.github.com/repos/" + String(repoOwner) + "/" + String(repoName) + "/releases/latest";
-    Serial.println("API URL: " + apiUrl);
-  
-    if (http.begin(clientSecure, apiUrl)) {
-      int httpCode = http.GET();
-      if (httpCode == HTTP_CODE_OK) {
-        String payload = http.getString();
-        http.end();  
-  
-        // Manually find "tag_name": "..."
-        int tagPos = payload.indexOf("\"tag_name\":");
-        if (tagPos != -1) {
-          int startQuote = payload.indexOf("\"", tagPos + 11);  // Skip `"tag_name":`
-          int endQuote = payload.indexOf("\"", startQuote + 1);
-          if (startQuote != -1 && endQuote != -1) {
-            return payload.substring(startQuote + 1, endQuote);
-          }
+String getLatestReleaseTag(const char *repoOwner, const char *repoName) {
+  HTTPClient http;
+  String apiUrl = "https://api.github.com/repos/" + String(repoOwner) + "/" +
+                  String(repoName) + "/releases/latest";
+  DBG_VERBOSE("OTA API: %s\n", apiUrl.c_str());
+
+  if (http.begin(clientSecure, apiUrl)) {
+    int httpCode = http.GET();
+    if (httpCode == HTTP_CODE_OK) {
+      String payload = http.getString();
+      http.end();
+
+      int tagPos = payload.indexOf("\"tag_name\":");
+      if (tagPos != -1) {
+        int startQuote = payload.indexOf("\"", tagPos + 11);
+        int endQuote = payload.indexOf("\"", startQuote + 1);
+        if (startQuote != -1 && endQuote != -1) {
+          return payload.substring(startQuote + 1, endQuote);
         }
-        
-        Serial.println("Tag not found in JSON!");
-      } else {
-        Serial.printf("HTTP GET failed, error: %d\n", httpCode);
       }
-  
-      
+
+      DBG_ERROR("OTA: tag not found\n");
     } else {
-      Serial.println("Unable to connect to GitHub API.");
+      DBG_ERROR("OTA GET failed: %d\n", httpCode);
     }
-    http.end();  
-    return "";
+  } else {
+    DBG_ERROR("OTA: GitHub connect failed\n");
   }
-  
-void checkForUpdates() {
-    String latestTag = getLatestReleaseTag(YOUR_GITHUB_USERNAME, YOUR_REPO_NAME);
-    Serial.printf("Current version: %s, Available version: %s\n", FIRMWARE_VERSION, latestTag.c_str());
-  
-    if (latestTag != "") {
-      if (latestTag != FIRMWARE_VERSION) {
-        const esp_partition_t* update_partition = esp_ota_get_next_update_partition(NULL);
-        
-        String firmwareURL = "https://github.com/" + String(YOUR_GITHUB_USERNAME) + "/" + String(YOUR_REPO_NAME) + "/releases/download/" + latestTag + "/SendToGrafana.ino.bin";
-        Serial.println("Firmware URL: " + firmwareURL);
-  
-        // Create the HTTP client to follow redirects
-        HTTPClient redirectHttp;
-        redirectHttp.begin(clientSecure, firmwareURL);  // Start the initial request
-      
-        const char *headerKeys[] = {"Location"};
-        const size_t headerKeysCount = sizeof(headerKeys) / sizeof(headerKeys[0]);
-        redirectHttp.collectHeaders(headerKeys, headerKeysCount);
-  
-        int redirectCode = redirectHttp.GET();  // Perform GET request
-        if (redirectCode == HTTP_CODE_FOUND || redirectCode == HTTP_CODE_MOVED_PERMANENTLY) {
-          Serial.println("Redirect found, HTTP code: " + String(redirectCode));        
-          Serial.println(redirectHttp.getString());
-          Serial.println(redirectHttp.headers());
-          Serial.println(redirectHttp.header("Location"));
-          // Now HTTPClient automatically handles redirection
-          String redirectedURL = redirectHttp.header("Location");
-          if (redirectedURL.length() > 0) {
-            Serial.println("Redirected to: " + redirectedURL);
-            firmwareURL = redirectedURL;  // Update firmware URL to the redirected one
-          } else {
-            Serial.println("No 'Location' header found in redirect response.");
-          }
-          // Proceed to update using the final URL
-          HTTPUpdate httpUpdate;
-  
-          httpUpdate.onStart([](){ Serial.println("Update started..."); });
-          httpUpdate.onEnd([](){ Serial.println("Update finished!"); });
-          httpUpdate.onProgress([](int cur, int total) { Serial.printf("Update progress: %d/%d\n", cur, total); });
-          httpUpdate.onError([](int err) { Serial.printf("Update error: %d\n", err); });
-  
-          t_httpUpdate_return ret = httpUpdate.update(clientSecure, firmwareURL);
-  
-          if (ret == HTTP_UPDATE_OK) {
-            Serial.println("Update successful!");
-            esp_ota_set_boot_partition(update_partition);
-          } else {
-            Serial.printf("Update failed: %d\n", httpUpdate.getLastError());
-          }
-  
-        } else {
-          Serial.printf("Error following redirect. HTTP code: %d\n", redirectCode);
-        }
-        // Always end the HTTP connection
-        redirectHttp.end();
-      } else {
-        Serial.println("Firmware is up to date.");
-      }
-    } else {
-      Serial.println("Unable to check for updates... empty release tag.");
-    }
+  http.end();
+  return "";
 }
+
+void checkForUpdates() {
+  String latestTag = getLatestReleaseTag(YOUR_GITHUB_USERNAME, YOUR_REPO_NAME);
+  DBG_VERBOSE("Version: %s -> %s\n", FIRMWARE_VERSION, latestTag.c_str());
+
+  if (latestTag != "") {
+    if (latestTag != FIRMWARE_VERSION) {
+      const esp_partition_t *update_partition =
+          esp_ota_get_next_update_partition(NULL);
+
+      String firmwareURL = "https://github.com/" +
+                           String(YOUR_GITHUB_USERNAME) + "/" +
+                           String(YOUR_REPO_NAME) + "/releases/download/" +
+                           latestTag + "/firmware.bin";
+      DBG_INFO("OTA URL: %s\n", firmwareURL.c_str());
+
+      HTTPClient redirectHttp;
+      redirectHttp.begin(clientSecure, firmwareURL);
+
+      const char *headerKeys[] = {"Location"};
+      redirectHttp.collectHeaders(headerKeys, 1);
+
+      int redirectCode = redirectHttp.GET();
+      if (redirectCode == HTTP_CODE_FOUND ||
+          redirectCode == HTTP_CODE_MOVED_PERMANENTLY) {
+        String redirectedURL = redirectHttp.header("Location");
+        if (redirectedURL.length() > 0) {
+          DBG_VERBOSE("OTA redirect: %s\n", redirectedURL.c_str());
+          firmwareURL = redirectedURL;
+        } else {
+          DBG_ERROR("OTA: no Location header\n");
+        }
+
+        HTTPUpdate httpUpdate;
+
+        httpUpdate.onStart([]() { DBG_INFO("OTA started\n"); });
+        httpUpdate.onEnd([]() { DBG_INFO("OTA finished\n"); });
+        httpUpdate.onProgress([](int cur, int total) {
+          DBG_VERBOSE("OTA: %d/%d\n", cur, total);
+        });
+        httpUpdate.onError([](int err) { DBG_ERROR("OTA error: %d\n", err); });
+
+        t_httpUpdate_return ret = httpUpdate.update(clientSecure, firmwareURL);
+
+        if (ret == HTTP_UPDATE_OK) {
+          DBG_INFO("OTA success!\n");
+          esp_ota_set_boot_partition(update_partition);
+        } else {
+          DBG_ERROR("OTA failed: %d\n", httpUpdate.getLastError());
+        }
+
+      } else {
+        DBG_ERROR("OTA redirect error: %d\n", redirectCode);
+      }
+      redirectHttp.end();
+    } else {
+      DBG_VERBOSE("Firmware up to date\n");
+    }
+  } else {
+    DBG_ERROR("OTA: empty release tag\n");
+  }
+}
+
+// ============== Local OTA (ArduinoOTA) ==============
+#ifdef ENABLE_OTA
+#include <ArduinoOTA.h>
+
+static bool localOTAInitialized = false;
+
+void initLocalOTA(const char *hostname) {
+  if (localOTAInitialized)
+    return;
+
+  DBG_INFOLN("\n[INFO] Configuring OTA (lazy init)...");
+  ArduinoOTA.setHostname(hostname);
+
+  ArduinoOTA.onStart([]() {
+    String type =
+        (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem";
+    DBG_INFO("[OTA] Start updating %s\n", type.c_str());
+  });
+
+  ArduinoOTA.onEnd([]() { DBG_INFOLN("\n[OTA] End"); });
+
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    DBG_VERBOSE("[OTA] Progress: %u%%\r", (progress / (total / 100)));
+  });
+
+  ArduinoOTA.onError([](ota_error_t error) {
+    DBG_ERROR("[OTA] Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR)
+      DBG_ERRORLN("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR)
+      DBG_ERRORLN("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR)
+      DBG_ERRORLN("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR)
+      DBG_ERRORLN("Receive Failed");
+    else if (error == OTA_END_ERROR)
+      DBG_ERRORLN("End Failed");
+  });
+
+  ArduinoOTA.begin();
+  localOTAInitialized = true;
+  DBG_INFOLN("[OK] Local OTA ready on port 3232");
+}
+
+void handleLocalOTA() {
+  if (localOTAInitialized) {
+    ArduinoOTA.handle();
+  }
+}
+
+bool isLocalOTAReady() { return localOTAInitialized; }
+
+#endif // ENABLE_OTA
