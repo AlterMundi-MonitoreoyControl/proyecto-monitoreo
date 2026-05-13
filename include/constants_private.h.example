@@ -1,0 +1,11 @@
+#ifndef CONSTANTS_PRIVATE_H
+#define CONSTANTS_PRIVATE_H
+
+// Configuración privada - NO COMMITEAR
+// Copia este archivo a constants_private.h y configura tus valores reales
+
+const char* URL = "http://your-grafana-server:8086/write?db=your_database";
+const char* TOKEN_GRAFANA = "token:your_grafana_token_here";
+const char* FIRMWARE_BIN_URL = "http://your-server/bins/firmware.bin";
+
+#endif

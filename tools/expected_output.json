@@ -1,0 +1,235 @@
+{
+  "GET /": "<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Monitor - Dashboard</title>\n    <link rel=\"icon... (truncated)",
+  "GET /api/status": {
+    "device_name": "ESP32-TestDevice",
+    "device_id": "N/A",
+    "firmware_version": "0.2.11",
+    "wifi_connected": true,
+    "wifi_ssid": "OpenWrt",
+    "wifi_ip": "192.168.1.110",
+    "wifi_rssi": -59,
+    "signal_class": "signal-good",
+    "active_sensors": 1,
+    "total_sensors": 1,
+    "uptime": "0h 1m"
+  },
+  "GET /actual": {
+    "sensors": [
+      {
+        "type": "SCD30",
+        "id": "thc-i2c-0x61",
+        "icon": "🌬️",
+        "active": true,
+        "error": false,
+        "readings": [
+          {
+            "label": "Temp",
+            "value": "32.5",
+            "unit": "°C",
+            "status": "ok",
+            "id": "thc-i2c-0x61",
+            "key": 8396897,
+            "key_device": 128,
+            "key_sensor": 8289,
+            "key_var": 0
+          },
+          {
+            "label": "Humedad",
+            "value": "32.2",
+            "unit": "%",
+            "status": "ok",
+            "id": "thc-i2c-0x61",
+            "key": 8396897,
+            "key_device": 128,
+            "key_sensor": 8289,
+            "key_var": 1
+          },
+          {
+            "label": "CO2",
+            "value": " 0",
+            "unit": "ppm",
+            "id": "thc-i2c-0x61",
+            "key": 8396897,
+            "key_device": 128,
+            "key_sensor": 8289,
+            "key_var": 2,
+            "status": "ok"
+          }
+        ]
+      }
+    ],
+    "wifi_status": "connected",
+    "uptime": "0h 1m 32s",
+    "actuators": []
+  },
+  "GET /config": {
+    "incubator_name": "ESP32-TestDevice",
+    "sensors": [
+      {
+        "type": "scd30",
+        "enabled": true,
+        "config": {}
+      },
+      {
+        "type": "bme280",
+        "enabled": false,
+        "config": {}
+      },
+      {
+        "type": "capacitive",
+        "enabled": false,
+        "config": {
+          "pin": 34,
+          "name": "Soil1"
+        }
+      },
+      {
+        "type": "onewire",
+        "enabled": false,
+        "config": {
+          "pin": 4,
+          "scan": true
+        }
+      }
+    ],
+    "relays": [
+      {
+        "type": "relay_2ch",
+        "enabled": false,
+        "config": {
+          "address": 1,
+          "alias": "Relay 01"
+        }
+      }
+    ],
+    "rs485": {
+      "enabled": false,
+      "rx_pin": 16,
+      "tx_pin": 17,
+      "de_pin": 18,
+      "baudrate": 9600,
+      "raw_send_enabled": false
+    },
+    "current_wifi_channel": 11
+  },
+  "POST /config": "Configuration updated successfully. Some changes require restart.",
+  "GET /api/relays": [],
+  "GET /actuator/status": [],
+  "POST /actuator/command": {
+    "ok": true,
+    "id": 0,
+    "state": false
+  },
+  "GET /rules": {
+    "rules": [
+      {
+        "expr": {
+          "sensor": {
+            "device": 128,
+            "id": 8289,
+            "var": 0
+          },
+          "cond": "GT",
+          "value": 30
+        },
+        "actuator": 16,
+        "state": true,
+        "priority": 2,
+        "duration_ms": 0
+      },
+      {
+        "expr": {
+          "sensor": {
+            "device": 128,
+            "id": 8289,
+            "var": 0
+          },
+          "cond": "LT",
+          "value": 29
+        },
+        "actuator": 16,
+        "state": false,
+        "priority": 2,
+        "duration_ms": 0
+      },
+      {
+        "expr": {
+          "op": "AND",
+          "left": {
+            "sensor": {
+              "device": 128,
+              "id": 8289,
+              "var": 0
+            },
+            "cond": "GT",
+            "value": 30
+          },
+          "right": {
+            "sensor": {
+              "device": 128,
+              "id": 8289,
+              "var": 1
+            },
+            "cond": "GT",
+            "value": 30
+          }
+        },
+        "actuator": 17,
+        "state": true,
+        "priority": 2,
+        "duration_ms": 2000
+      },
+      {
+        "expr": {
+          "op": "OR",
+          "left": {
+            "sensor": {
+              "device": 128,
+              "id": 8289,
+              "var": 0
+            },
+            "cond": "LT",
+            "value": 30
+          },
+          "right": {
+            "sensor": {
+              "device": 128,
+              "id": 8289,
+              "var": 1
+            },
+            "cond": "LT",
+            "value": 30
+          }
+        },
+        "actuator": 17,
+        "state": false,
+        "priority": 2,
+        "duration_ms": 2000
+      }
+    ]
+  },
+  "POST /rules/reload": {
+    "ok": true,
+    "rules_loaded": 4
+  },
+  "POST /rules/save (round-trip)": {
+    "ok": true,
+    "rules_loaded": 4
+  },
+  "GET /calibrate-scd30  (SCD30)": {
+    "status": "error",
+    "message": "No sensor active",
+    "sensor_detected": false,
+    "calibration_performed": false
+  },
+  "GET /espnow/status": {
+    "enabled": false,
+    "mode": "sensor",
+    "forced_mode": "",
+    "mac_address": "80:F3:DA:9A:E5:20",
+    "channel": 11,
+    "paired": false,
+    "peer_count": 0
+  },
+  "POST /restart  ⚠ DESTRUCTIVE": "Restarting ESP32..."
+}

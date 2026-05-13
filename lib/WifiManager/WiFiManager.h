@@ -6,10 +6,11 @@
 #include <WebServer.h>
 #include <DNSServer.h>
 #include <Preferences.h>
+#include "../../include/debug.h"
 
-// Logging macros - adjust as needed for your logging system
-#define LOG_TRACE(msg) Serial.println(String("[W] ") + msg)
-#define LOG_ERROR(msg) Serial.println(String("[W] ERROR: ") + msg)
+// Logging macros using debug system
+#define LOG_TRACE(msg) DBG_VERBOSE("[WiFi] %s\n", String(msg).c_str())
+#define LOG_ERROR(msg) DBG_ERROR("[WiFi] %s\n", String(msg).c_str())
 
 
 

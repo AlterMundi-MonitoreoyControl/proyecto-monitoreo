@@ -1,0 +1,813 @@
+{
+  "dashboard": {
+    "title": "AlterMundi - Monitoreo de Sensores",
+    "tags": ["altermundi", "sensores", "ambiente"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 0,
+    "refresh": "30s",
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["10s", "30s", "1m", "5m", "15m", "30m", "1h"]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "device",
+          "label": "Dispositivo",
+          "type": "query",
+          "datasource": "InfluxDB",
+          "query": "SHOW TAG VALUES FROM \"medicionesCO2\" WITH KEY = \"device\"",
+          "multi": true,
+          "includeAll": true,
+          "refresh": 1,
+          "allValue": ".*",
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          }
+        },
+        {
+          "name": "sensor",
+          "label": "Tipo de Sensor",
+          "type": "query",
+          "datasource": "InfluxDB",
+          "query": "SHOW TAG VALUES FROM \"medicionesCO2\" WITH KEY = \"sensor\"",
+          "multi": true,
+          "includeAll": true,
+          "refresh": 1,
+          "allValue": ".*",
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          }
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "type": "row",
+        "title": "Resumen General",
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        },
+        "collapsed": false
+      },
+      {
+        "id": 2,
+        "type": "stat",
+        "title": "Dispositivos Activos",
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 1
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "fields": "",
+            "calcs": ["lastNotNull"]
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": []
+          }
+        },
+        "targets": [
+          {
+            "datasource": "InfluxDB",
+            "query": "SELECT COUNT(DISTINCT(\"device\")) FROM \"medicionesCO2\" WHERE $timeFilter",
+            "rawQuery": true,
+            "resultFormat": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "type": "stat",
+        "title": "Temperatura Promedio",
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 6,
+          "y": 1
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "fields": "",
+            "calcs": ["mean"]
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "celsius",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "blue"},
+                {"value": 18, "color": "green"},
+                {"value": 25, "color": "yellow"},
+                {"value": 30, "color": "red"}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "decimals": 1
+          }
+        },
+        "targets": [
+          {
+            "datasource": "InfluxDB",
+            "query": "SELECT mean(\"temp\") FROM \"medicionesCO2\" WHERE (\"device\" =~ /^$device$/ AND \"sensor\" =~ /^$sensor$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+            "rawQuery": true,
+            "resultFormat": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "type": "stat",
+        "title": "Humedad Promedio",
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 12,
+          "y": 1
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "fields": "",
+            "calcs": ["mean"]
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 30, "color": "yellow"},
+                {"value": 40, "color": "green"},
+                {"value": 70, "color": "yellow"},
+                {"value": 80, "color": "red"}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "decimals": 1
+          }
+        },
+        "targets": [
+          {
+            "datasource": "InfluxDB",
+            "query": "SELECT mean(\"hum\") FROM \"medicionesCO2\" WHERE (\"device\" =~ /^$device$/ AND \"sensor\" =~ /^$sensor$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+            "rawQuery": true,
+            "resultFormat": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "type": "stat",
+        "title": "CO₂ Promedio",
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 18,
+          "y": 1
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "fields": "",
+            "calcs": ["mean"]
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ppm",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 800, "color": "yellow"},
+                {"value": 1000, "color": "orange"},
+                {"value": 1500, "color": "red"}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "decimals": 0
+          }
+        },
+        "targets": [
+          {
+            "datasource": "InfluxDB",
+            "query": "SELECT mean(\"co2\") FROM \"medicionesCO2\" WHERE (\"device\" =~ /^$device$/ AND \"sensor\" =~ /^$sensor$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+            "rawQuery": true,
+            "resultFormat": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "type": "row",
+        "title": "Gráficas Temporales",
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 5
+        },
+        "collapsed": false
+      },
+      {
+        "id": 7,
+        "type": "graph",
+        "title": "Temperatura por Dispositivo",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 6
+        },
+        "options": {
+          "legend": {
+            "show": true,
+            "values": true,
+            "current": true,
+            "alignAsTable": true,
+            "rightSide": false
+          },
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "celsius",
+            "custom": {
+              "lineInterpolation": "smooth",
+              "spanNulls": true,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "axisPlacement": "auto",
+              "axisLabel": "Temperatura (°C)"
+            },
+            "color": {
+              "mode": "palette-classic"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"}
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": "InfluxDB",
+            "query": "SELECT mean(\"temp\") FROM \"medicionesCO2\" WHERE (\"device\" =~ /^$device$/ AND \"sensor\" =~ /^$sensor$/) AND $timeFilter GROUP BY time($__interval), \"device\", \"sensor\" fill(linear)",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "$tag_device - $tag_sensor"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "yaxes": [
+          {
+            "format": "celsius",
+            "label": "Temperatura",
+            "logBase": 1,
+            "show": true
+          },
+          {
+            "format": "short",
+            "logBase": 1,
+            "show": false
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "type": "graph",
+        "title": "Humedad por Dispositivo",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 6
+        },
+        "options": {
+          "legend": {
+            "show": true,
+            "values": true,
+            "current": true,
+            "alignAsTable": true,
+            "rightSide": false
+          },
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "custom": {
+              "lineInterpolation": "smooth",
+              "spanNulls": true,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "axisPlacement": "auto",
+              "axisLabel": "Humedad (%)"
+            },
+            "color": {
+              "mode": "palette-classic"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"}
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": "InfluxDB",
+            "query": "SELECT mean(\"hum\") FROM \"medicionesCO2\" WHERE (\"device\" =~ /^$device$/ AND \"sensor\" =~ /^$sensor$/) AND $timeFilter GROUP BY time($__interval), \"device\", \"sensor\" fill(linear)",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "$tag_device - $tag_sensor"
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "yaxes": [
+          {
+            "format": "percent",
+            "label": "Humedad",
+            "logBase": 1,
+            "max": 100,
+            "min": 0,
+            "show": true
+          },
+          {
+            "format": "short",
+            "logBase": 1,
+            "show": false
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "type": "graph",
+        "title": "CO₂ por Dispositivo",
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 14
+        },
+        "options": {
+          "legend": {
+            "show": true,
+            "values": true,
+            "current": true,
+            "max": true,
+            "min": true,
+            "alignAsTable": true,
+            "rightSide": false
+          },
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ppm",
+            "custom": {
+              "lineInterpolation": "smooth",
+              "spanNulls": true,
+              "fillOpacity": 10,
+              "gradientMode": "opacity",
+              "axisPlacement": "auto",
+              "axisLabel": "CO₂ (ppm)"
+            },
+            "color": {
+              "mode": "palette-classic"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 800, "color": "yellow"},
+                {"value": 1000, "color": "orange"},
+                {"value": 1500, "color": "red"}
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": "InfluxDB",
+            "query": "SELECT mean(\"co2\") FROM \"medicionesCO2\" WHERE (\"device\" =~ /^$device$/ AND \"sensor\" =~ /^$sensor$/) AND $timeFilter GROUP BY time($__interval), \"device\", \"sensor\" fill(linear)",
+            "rawQuery": true,
+            "resultFormat": "time_series",
+            "alias": "$tag_device - $tag_sensor"
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [1000],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "name": "Alerta CO₂ Alto",
+          "noDataState": "no_data",
+          "notifications": []
+        },
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "yaxes": [
+          {
+            "format": "ppm",
+            "label": "CO₂",
+            "logBase": 1,
+            "show": true
+          },
+          {
+            "format": "short",
+            "logBase": 1,
+            "show": false
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "type": "row",
+        "title": "Tabla de Dispositivos",
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 22
+        },
+        "collapsed": false
+      },
+      {
+        "id": 11,
+        "type": "table",
+        "title": "Estado Actual de Sensores",
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 23
+        },
+        "options": {
+          "showHeader": true,
+          "sortBy": [
+            {
+              "displayName": "device",
+              "desc": false
+            }
+          ]
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "auto",
+              "displayMode": "auto"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "temp"
+              },
+              "properties": [
+                {
+                  "id": "unit",
+                  "value": "celsius"
+                },
+                {
+                  "id": "displayName",
+                  "value": "Temperatura"
+                },
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-background"
+                },
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "mode": "absolute",
+                    "steps": [
+                      {"value": null, "color": "blue"},
+                      {"value": 18, "color": "green"},
+                      {"value": 25, "color": "yellow"},
+                      {"value": 30, "color": "red"}
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "hum"
+              },
+              "properties": [
+                {
+                  "id": "unit",
+                  "value": "percent"
+                },
+                {
+                  "id": "displayName",
+                  "value": "Humedad"
+                },
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-background"
+                },
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "mode": "absolute",
+                    "steps": [
+                      {"value": null, "color": "red"},
+                      {"value": 30, "color": "yellow"},
+                      {"value": 40, "color": "green"},
+                      {"value": 70, "color": "yellow"},
+                      {"value": 80, "color": "red"}
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "co2"
+              },
+              "properties": [
+                {
+                  "id": "unit",
+                  "value": "ppm"
+                },
+                {
+                  "id": "displayName",
+                  "value": "CO₂"
+                },
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-background"
+                },
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "mode": "absolute",
+                    "steps": [
+                      {"value": null, "color": "green"},
+                      {"value": 800, "color": "yellow"},
+                      {"value": 1000, "color": "orange"},
+                      {"value": 1500, "color": "red"}
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "device"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Dispositivo"
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "sensor"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Sensor"
+                }
+              ]
+            }
+          ]
+        },
+        "targets": [
+          {
+            "datasource": "InfluxDB",
+            "query": "SELECT last(\"temp\") as \"temp\", last(\"hum\") as \"hum\", last(\"co2\") as \"co2\" FROM \"medicionesCO2\" WHERE (\"device\" =~ /^$device$/ AND \"sensor\" =~ /^$sensor$/) AND $timeFilter GROUP BY \"device\", \"sensor\"",
+            "rawQuery": true,
+            "resultFormat": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "Time": true
+              },
+              "indexByName": {
+                "device": 0,
+                "sensor": 1,
+                "temp": 2,
+                "hum": 3,
+                "co2": 4
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "type": "row",
+        "title": "Mapa de Calor",
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 31
+        },
+        "collapsed": false
+      },
+      {
+        "id": 13,
+        "type": "heatmap",
+        "title": "Distribución de CO₂ en el Tiempo",
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 32
+        },
+        "options": {
+          "calculate": true,
+          "calculation": {
+            "xBuckets": {
+              "mode": "size",
+              "value": "1h"
+            }
+          },
+          "cellGap": 2,
+          "cellRadius": 0,
+          "color": {
+            "exponent": 0.5,
+            "fill": "dark-orange",
+            "mode": "scheme",
+            "reverse": false,
+            "scale": "exponential",
+            "scheme": "RdYlGn",
+            "steps": 128
+          },
+          "exemplars": {
+            "color": "rgba(255,0,255,0.7)"
+          },
+          "filterValues": {
+            "le": 1e-9
+          },
+          "legend": {
+            "show": true
+          },
+          "rowsFrame": {
+            "layout": "auto"
+          },
+          "tooltip": {
+            "show": true,
+            "yHistogram": false
+          },
+          "yAxis": {
+            "axisPlacement": "left",
+            "reverse": false,
+            "unit": "ppm"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              },
+              "scaleDistribution": {
+                "type": "linear"
+              }
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": "InfluxDB",
+            "query": "SELECT mean(\"co2\") FROM \"medicionesCO2\" WHERE (\"device\" =~ /^$device$/ AND \"sensor\" =~ /^$sensor$/) AND $timeFilter GROUP BY time(1h) fill(null)",
+            "rawQuery": true,
+            "resultFormat": "time_series"
+          }
+        ]
+      }
+    ]
+  },
+  "overwrite": false
+}

@@ -3,7 +3,15 @@
 
 #include <Arduino.h>
 
-String getLatestReleaseTag(const char* repoOwner, const char* repoName);
+// GitHub OTA (remote updates)
+String getLatestReleaseTag(const char *repoOwner, const char *repoName);
 void checkForUpdates();
+
+// Local OTA (ArduinoOTA - development only)
+#ifdef ENABLE_OTA
+void initLocalOTA(const char *hostname);
+void handleLocalOTA();
+bool isLocalOTAReady();
+#endif
 
 #endif // OTA_UPDATER_H

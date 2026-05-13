@@ -1,14 +1,111 @@
 {
-  "rotation_duration": 50000,
-  "rotation_period": 3600000,
-  "min_temperature": 37.5,
-  "max_temperature": 37.7,
-  "tray_one_date": 0,
-  "tray_two_date": 0,
-  "tray_three_date": 0,
-  "incubation_period": 18,
-  "max_hum": 65,
-  "min_hum": 55,
-  "hash": "moni-XXXX",
-  "moni_name": "moni-XXXX"
+	"max_temperature": 37.7,
+	"min_temperature": 37.3,
+	"rotation_duration": 50000,
+	"rotation_period": 3600000,
+	"ssid": "ToChange",
+	"passwd": "ToChange",
+	"tray_one_date": 0,
+	"tray_two_date": 0,
+	"tray_three_date": 0,
+	"incubation_period": 18,
+	"max_hum": 65,
+	"min_hum": 55,
+	"hash": "80F3DA9AE520",
+	"incubator_name": "moni-80F3DA9AE520",
+	"sensors": [
+		{
+			"type": "scd30",
+			"enabled": true,
+			"config": {}
+		},
+		{
+			"type": "bme280",
+			"enabled": false,
+			"config": {}
+		},
+		{
+			"type": "modbus_th",
+			"enabled": false,
+			"config": {
+				"addresses": [
+					1
+				]
+			}
+		},
+		{
+			"type": "modbus_soil_7in1",
+			"enabled": false,
+			"config": {
+				"addresses": [
+					1
+				]
+			}
+		},
+		{
+			"type": "onewire",
+			"enabled": false,
+			"config": {
+				"pin": 4,
+				"scan": true
+			}
+		},
+		{
+			"type": "capacitive",
+			"enabled": true,
+			"config": {
+				"pin": 34,
+				"name": "Soil1",
+				"dry": 3000,
+				"wet": 1000
+			}
+		},
+		{
+			"type": "hd38",
+			"enabled": true,
+			"config": {
+				"voltage_divider": false,
+				"invert_logic": false,
+				"name": "",
+				"pin": 35,
+				"dry": 4000,
+				"wet": 200
+			}
+		}
+	],
+	"relays": [
+		{
+			"type": "relay_2ch",
+			"enabled": true,
+			"config": {
+				"address": 1,
+				"alias": "Relay 01"
+			}
+		},
+		{
+			"type": "gpio",
+			"enabled": true,
+			"config": {
+				"pin": 2,
+				"alias": "Nuevo Relé GPIO",
+				"active_low": false
+			}
+		}
+	],
+	"rs485": {
+		"enabled": true,
+		"rx_pin": 16,
+		"tx_pin": 17,
+		"de_pin": 18,
+		"baudrate": 9600,
+		"raw_send_enabled": false
+	},
+	"espnow_enabled": false,
+	"espnow_force_mode": "",
+	"espnow_channel": 1,
+	"beacon_interval_ms": 2000,
+	"discovery_timeout_ms": 15000,
+	"send_interval_ms": 30000,
+	"grafana_ping_url": "http://192.168.1.1/ping",
+	"current_wifi_channel": 11
 }

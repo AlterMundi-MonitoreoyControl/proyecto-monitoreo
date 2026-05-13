@@ -22,15 +22,33 @@ jobs:
         python-version: '3.x'
 
     - name: Install PlatformIO
-      run: pip install platformio
+      run: pip install platformio==6.1.16
+
+    - name: Create constants_private.h from secrets
+      run: |
+        cat > include/constants_private.h << 'EOF'
+        #ifndef CONSTANTS_PRIVATE_H
+        #define CONSTANTS_PRIVATE_H
+
+        // Configuración privada - generado automáticamente en CI
+
+        const char* URL = "${{ secrets.GRAFANA_URL }}";
+        const char* TOKEN_GRAFANA = "${{ secrets.GRAFANA_TOKEN }}";
+
+        #endif
+        EOF
+
+    - name: Run Unit Tests
+      run: pio test -e native_test
 
     - name: Build Firmware
       run: |
         mkdir -p binarios
-        pio run -e esp32dev            # Compila todo, incluyendo firmware.bin
-        pio run -e esp32dev --target buildfs   # También el SPIFFS
-        cp .pio/build/esp32dev/firmware.bin binarios/SendToGrafana.ino.bin
-        cp .pio/build/esp32dev/spiffs.bin binarios/ || echo "No se generó spiffs.bin"
+        pio run -e esp32dev_multi            # Compila todo, incluyendo firmware.bin
+        pio run -e esp32dev_multi --target buildfs   # También el SPIFFS
+        cp .pio/build/esp32dev_multi/firmware.bin binarios/firmware.bin
+        cp .pio/build/esp32dev_multi/spiffs.bin binarios/ || echo "No se generó spiffs.bin"
+        cp build_reports/size_report_esp32dev_multi.txt binarios/ || echo "No se generaron reportes de build"
 
     - name: Get Version
       id: get_version
@@ -39,10 +57,12 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_ENV
 
     - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: ncipollo/release-action@v1
       with:
         artifacts: "binarios/*"
         tag: "${{ env.version }}"
         name: Release "${{ env.version }}"
         body: "Binarios de firmware generados automáticamente"
+        generateReleaseNotes: true
         token: ${{ secrets.GITHUB_TOKEN }}
