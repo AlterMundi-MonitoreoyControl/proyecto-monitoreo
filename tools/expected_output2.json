@@ -1,0 +1,445 @@
+{
+  "GET /": "<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Monitor - Dashboard</title>\n    <link rel=\"icon... (truncated)",
+  "GET /api/status": {
+    "device_name": "moni-80F3DA9AE520",
+    "device_id": "80F3DA9AE520",
+    "firmware_version": "0.2.11",
+    "wifi_connected": true,
+    "wifi_ssid": "OpenWrt",
+    "wifi_ip": "192.168.1.110",
+    "wifi_rssi": -58,
+    "signal_class": "signal-good",
+    "active_sensors": 3,
+    "total_sensors": 3,
+    "uptime": "0h 13m"
+  },
+  "GET /actual": {
+    "sensors": [
+      {
+        "type": "SCD30",
+        "id": "thc-i2c-0x61",
+        "icon": "🌬️",
+        "active": true,
+        "error": false,
+        "readings": [
+          {
+            "label": "Temp",
+            "value": "36.6",
+            "unit": "°C",
+            "status": "ok",
+            "id": "thc-i2c-0x61",
+            "key": 8396897,
+            "key_device": 128,
+            "key_sensor": 8289,
+            "key_var": 0
+          },
+          {
+            "label": "Humedad",
+            "value": "28.7",
+            "unit": "%",
+            "status": "ok",
+            "id": "thc-i2c-0x61",
+            "key": 8396897,
+            "key_device": 128,
+            "key_sensor": 8289,
+            "key_var": 1
+          },
+          {
+            "label": "CO2",
+            "value": " 0",
+            "unit": "ppm",
+            "id": "thc-i2c-0x61",
+            "key": 8396897,
+            "key_device": 128,
+            "key_sensor": 8289,
+            "key_var": 2,
+            "status": "ok"
+          }
+        ]
+      },
+      {
+        "type": "Capacitive",
+        "id": "m-adc-34",
+        "icon": "🌱",
+        "active": true,
+        "error": false,
+        "readings": [
+          {
+            "label": "Humedad",
+            "value": "100.0",
+            "unit": "%",
+            "status": "ok",
+            "id": "m-adc-34",
+            "key": 8392738,
+            "key_device": 128,
+            "key_sensor": 4130,
+            "key_var": 3
+          }
+        ],
+        "diagnostics": {
+          "raw": 0,
+          "pin": 34,
+          "id": "m-adc-34",
+          "key": 8392738
+        },
+        "calibration": {
+          "dry": 3000,
+          "wet": 1000
+        }
+      },
+      {
+        "type": "hd38_35",
+        "id": "m-adc-35",
+        "icon": "🌱",
+        "active": true,
+        "error": false,
+        "readings": [
+          {
+            "label": "Humedad",
+            "value": "100.0",
+            "unit": "%",
+            "status": "ok",
+            "id": "m-adc-35",
+            "key": 8392739,
+            "key_device": 128,
+            "key_sensor": 4131,
+            "key_var": 3
+          }
+        ],
+        "diagnostics": {
+          "raw": 0,
+          "pin": 35,
+          "id": "m-adc-35",
+          "key": 8392739
+        },
+        "calibration": {
+          "dry": 4000,
+          "wet": 200
+        }
+      },
+      {
+        "type": "Entradas Digitales",
+        "id": "modbus_relay_1",
+        "icon": "🔌",
+        "active": true,
+        "error": false,
+        "readings": [
+          {
+            "label": "IN 1",
+            "value": "0",
+            "unit": "",
+            "status": "warn",
+            "key_device": 128,
+            "key_sensor": 1,
+            "key_var": 11
+          },
+          {
+            "label": "IN 2",
+            "value": "1",
+            "unit": "",
+            "status": "ok",
+            "key_device": 128,
+            "key_sensor": 1,
+            "key_var": 12
+          }
+        ]
+      }
+    ],
+    "wifi_status": "connected",
+    "uptime": "0h 13m 51s",
+    "actuators": [
+      {
+        "id": 16,
+        "name": "Relay 01 CH1",
+        "state": true,
+        "key_actuator": 16
+      },
+      {
+        "id": 17,
+        "name": "Relay 01 CH2",
+        "state": false,
+        "key_actuator": 17
+      },
+      {
+        "id": 202,
+        "name": "Nuevo Relé GPIO",
+        "state": false,
+        "key_actuator": 202
+      }
+    ]
+  },
+  "GET /config": {
+    "max_temperature": 37.7,
+    "min_temperature": 37.3,
+    "rotation_duration": 50000,
+    "rotation_period": 3600000,
+    "ssid": "ToChange",
+    "passwd": "ToChange",
+    "tray_one_date": 0,
+    "tray_two_date": 0,
+    "tray_three_date": 0,
+    "incubation_period": 18,
+    "max_hum": 65,
+    "min_hum": 55,
+    "hash": "80F3DA9AE520",
+    "incubator_name": "moni-80F3DA9AE520",
+    "sensors": [
+      {
+        "type": "scd30",
+        "enabled": true,
+        "config": {}
+      },
+      {
+        "type": "bme280",
+        "enabled": false,
+        "config": {}
+      },
+      {
+        "type": "modbus_th",
+        "enabled": false,
+        "config": {
+          "addresses": [
+            1
+          ]
+        }
+      },
+      {
+        "type": "modbus_soil_7in1",
+        "enabled": false,
+        "config": {
+          "addresses": [
+            1
+          ]
+        }
+      },
+      {
+        "type": "onewire",
+        "enabled": false,
+        "config": {
+          "pin": 4,
+          "scan": true
+        }
+      },
+      {
+        "type": "capacitive",
+        "enabled": true,
+        "config": {
+          "pin": 34,
+          "name": "Soil1",
+          "dry": 3000,
+          "wet": 1000
+        }
+      },
+      {
+        "type": "hd38",
+        "enabled": true,
+        "config": {
+          "voltage_divider": false,
+          "invert_logic": false,
+          "name": "",
+          "pin": 35,
+          "dry": 4000,
+          "wet": 200
+        }
+      }
+    ],
+    "relays": [
+      {
+        "type": "relay_2ch",
+        "enabled": true,
+        "config": {
+          "address": 1,
+          "alias": "Relay 01"
+        }
+      },
+      {
+        "type": "gpio",
+        "enabled": true,
+        "config": {
+          "pin": 2,
+          "alias": "Nuevo Relé GPIO",
+          "active_low": false
+        }
+      }
+    ],
+    "rs485": {
+      "enabled": true,
+      "rx_pin": 16,
+      "tx_pin": 17,
+      "de_pin": 18,
+      "baudrate": 9600,
+      "raw_send_enabled": false
+    },
+    "espnow_enabled": false,
+    "espnow_force_mode": "",
+    "espnow_channel": 1,
+    "beacon_interval_ms": 2000,
+    "discovery_timeout_ms": 15000,
+    "send_interval_ms": 30000,
+    "grafana_ping_url": "http://192.168.1.1/ping",
+    "current_wifi_channel": 11
+  },
+  "POST /config": "Configuration updated successfully. Some changes require restart.",
+  "GET /api/relays": [
+    {
+      "address": 1,
+      "alias": "Relay 01",
+      "r0": 1,
+      "r1": 0,
+      "state": [
+        true,
+        false
+      ],
+      "input_state": [
+        false,
+        true
+      ]
+    },
+    {
+      "type": "gpio",
+      "address": 2,
+      "alias": "Nuevo Relé GPIO",
+      "state": [
+        false
+      ]
+    }
+  ],
+  "POST /api/relay/toggle?addr=1&ch=0": "OK",
+  "GET /actuator/status": [
+    {
+      "id": 16,
+      "name": "Relay 01 CH1",
+      "state": false
+    },
+    {
+      "id": 17,
+      "name": "Relay 01 CH2",
+      "state": false
+    },
+    {
+      "id": 202,
+      "name": "Nuevo Relé GPIO",
+      "state": false
+    }
+  ],
+  "POST /actuator/command": {
+    "ok": true,
+    "id": 0,
+    "state": false
+  },
+  "GET /rules": {
+    "rules": [
+      {
+        "expr": {
+          "sensor": {
+            "device": 128,
+            "id": 8289,
+            "var": 0
+          },
+          "cond": "GT",
+          "value": 30
+        },
+        "actuator": 16,
+        "state": true,
+        "priority": 2,
+        "duration_ms": 0
+      },
+      {
+        "expr": {
+          "sensor": {
+            "device": 128,
+            "id": 8289,
+            "var": 0
+          },
+          "cond": "LT",
+          "value": 29
+        },
+        "actuator": 16,
+        "state": false,
+        "priority": 2,
+        "duration_ms": 0
+      },
+      {
+        "expr": {
+          "op": "AND",
+          "left": {
+            "sensor": {
+              "device": 128,
+              "id": 8289,
+              "var": 0
+            },
+            "cond": "GT",
+            "value": 30
+          },
+          "right": {
+            "sensor": {
+              "device": 128,
+              "id": 8289,
+              "var": 1
+            },
+            "cond": "GT",
+            "value": 30
+          }
+        },
+        "actuator": 17,
+        "state": true,
+        "priority": 2,
+        "duration_ms": 2000
+      },
+      {
+        "expr": {
+          "op": "OR",
+          "left": {
+            "sensor": {
+              "device": 128,
+              "id": 8289,
+              "var": 0
+            },
+            "cond": "LT",
+            "value": 30
+          },
+          "right": {
+            "sensor": {
+              "device": 128,
+              "id": 8289,
+              "var": 1
+            },
+            "cond": "LT",
+            "value": 30
+          }
+        },
+        "actuator": 17,
+        "state": false,
+        "priority": 2,
+        "duration_ms": 2000
+      }
+    ]
+  },
+  "POST /rules/reload": {
+    "ok": true,
+    "rules_loaded": 4
+  },
+  "POST /rules/save (round-trip)": {
+    "ok": true,
+    "rules_loaded": 4
+  },
+  "GET /calibrate-scd30  (SCD30)": {
+    "status": "success",
+    "message": "Sensor calibration completed successfully",
+    "sensor_type": "SCD30",
+    "sensor_detected": true,
+    "calibration_performed": true,
+    "target_co2": 400,
+    "note": "Allow 2-3 minutes for sensor to stabilize after calibration"
+  },
+  "GET /espnow/status": {
+    "enabled": false,
+    "mode": "sensor",
+    "forced_mode": "",
+    "mac_address": "80:F3:DA:9A:E5:20",
+    "channel": 11,
+    "paired": false,
+    "peer_count": 0
+  },
+  "POST /restart  ⚠ DESTRUCTIVE": "Restarting ESP32..."
+}
